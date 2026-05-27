@@ -302,9 +302,23 @@ function initViz(){
 function easeOut(t){ return 1-Math.pow(1-t,3); }
 function transformedFromData(){ return false; }
 
-/* ---------- Tela de Resultado: síntese personalizada ---------- */
+/* ---------- Tela de Resultado: síntese personalizada e narrativa ---------- */
+const BODY_READINGS = {
+  "Cabeça": "na racionalização — onde você fica girando um pensamento sem conseguir sair dele",
+  "Garganta": "na voz que você ainda não autorizou — o que precisa ser dito está represado aí",
+  "Peito": "no fôlego — bem onde a expansão acontece quando você se permite",
+  "Coração": "no afeto — no que você ama tanto que tem medo de perder",
+  "Estômago": "na intuição — você sabe antes da mente saber, e isso te aperta aí",
+  "Ombros": "no peso que você carrega — provavelmente uma responsabilidade que nem era sua",
+  "Costas": "no que vem por trás — no que está fora do seu campo de visão consciente",
+  "Ventre": "no centro criativo — onde nasce o que ainda não veio para fora",
+  "Mãos": "no fazer — no que está pronto para sair de você e ainda não saiu",
+  "Pernas": "na direção — no avançar que ainda não autorizou"
+};
+
 function renderResult(){
   const host=document.querySelector('.screen[data-screen="result"]');
+  const nome = (data.nome||"").trim();
   const trava = (data.trava||"").trim();
   const corpo = (data.corpo||"").trim();
   const desejo = (data.desejo||"").trim();
@@ -315,74 +329,89 @@ function renderResult(){
   const pessoa = (data.pessoa||"").trim();
   const relacao = (data.relacao||"").trim();
 
+  const saudacao = nome ? `${esc(nome)},` : "Olha só o que você acabou de fazer:";
+  const corpoLeitura = corpo && BODY_READINGS[corpo] ? BODY_READINGS[corpo] : "";
+
   let html = `<div class="stagger">
-    <p class="eyebrow">Seu Mapa</p>
-    <h2 style="margin-top:18px">A leitura do seu <em>poder</em></h2>
-    <p class="body" style="margin-top:22px">Este é o seu mapa, costurado a partir do que você reconheceu nos 8 passos. Releia com calma — ele revela onde a sua trava virou direção.</p>
+    <p class="eyebrow">✦ Seu Mapa do Poder</p>
+    <h2 style="margin-top:18px">${saudacao}<br><em>aqui está o que apareceu</em></h2>
+    <p class="body" style="margin-top:22px">Este é o seu mapa — costurado a partir das suas próprias respostas. Releia com calma. Ele não foi escrito por mim, foi escrito por você.</p>
 
-    <div class="card">
-      <div class="result-block">
-        <div class="result-label">A trava que você nomeou</div>
-        <div class="result-value">${trava?esc(trava):"<i>(não respondida)</i>"}</div>
-      </div>`;
+    <!-- Leitura narrativa: o coração do resultado -->
+    <div class="ritual" style="border-left-color:var(--gold);margin-top:26px;font-style:normal;font-family:var(--sans);font-size:clamp(15px,3.8vw,17px);line-height:1.7;color:var(--cream)">
+      <span class="mark">✦</span>`;
 
+  // Parágrafo 1: a trava nomeada
+  if(trava){
+    html += `<p style="margin-bottom:14px">Você reconheceu como sua trava principal: <b style="color:var(--gold-soft);font-weight:500">"${esc(trava)}"</b>. Nomear é o primeiro ato de poder — porque o que não tem nome continua mandando em você sem que você veja.</p>`;
+  }
+
+  // Parágrafo 2: origem
   if(primeira || pessoa){
-    html += `<div class="result-block">
-        <div class="result-label">De onde ela vem</div>
-        <div class="result-value">${primeira?esc(primeira):""}${pessoa?`<br><span class="result-sub">Perto de: ${esc(pessoa)}</span>`:""}</div>
-      </div>`;
+    html += `<p style="margin-bottom:14px">Ela tem uma história. ${primeira?`Começou em algum lugar do tempo: <i>${esc(primeira)}</i>.`:""} ${pessoa?`E aparece perto de <b style="color:var(--gold-soft);font-weight:500">${esc(pessoa)}</b> — isso não é coincidência. As pessoas que ativam nossas travas são, no fundo, espelhos do que precisamos integrar.`:""}</p>`;
   }
-  if(relacao){
-    html += `<div class="result-block">
-        <div class="result-label">A relação por trás dela</div>
-        <div class="result-value">${esc(relacao)}</div>
-      </div>`;
+
+  // Parágrafo 3: força que já viveu
+  if(momentos.length || sentimentos){
+    html += `<p style="margin-bottom:14px">Mas olha o que você também trouxe: <b style="color:var(--gold-soft);font-weight:500">você já avançou antes</b>. ${momentos.length?`Você lembrou de ${momentos.length} ${momentos.length>1?"momentos":"momento"} em que seguiu mesmo com a trava — isso é prova viva de que o caminho existe.`:""} ${sentimentos?`Naqueles momentos você sentiu: <i>${esc(sentimentos)}</i>. Guarde essa lista — ela é o seu antídoto.`:""}</p>`;
   }
-  if(momentos.length){
-    html += `<div class="result-block">
-        <div class="result-label">Momentos em que você já avançou</div>
-        <div class="result-value"><ul class="result-list">${momentos.map(m=>`<li>${m}</li>`).join("")}</ul></div>
-      </div>`;
+
+  // Parágrafo 4: corpo + desejo
+  if(corpo || desejo){
+    html += `<p style="margin-bottom:14px">`;
+    if(corpo){
+      html += `Seu corpo te entregou a pista: a trava mora em <b style="color:var(--gold-soft);font-weight:500">${esc(corpo)}</b>${corpoLeitura?` — ${corpoLeitura}`:""}. Toda vez que você sentir essa região tensionando, é a sua trava pedindo presença, não fuga. `;
+    }
+    if(desejo){
+      html += `E aqui está a direção: você nomeou que deseja <b style="color:var(--gold-soft);font-weight:500">${esc(desejo)}</b>. Esse desejo não é o oposto da sua trava — é o que ela está escondendo. A trava aponta exatamente para onde sua potência quer crescer.`;
+    }
+    html += `</p>`;
   }
-  if(sentimentos){
-    html += `<div class="result-block">
-        <div class="result-label">A força que você já viveu</div>
-        <div class="result-value">${esc(sentimentos)}</div>
-      </div>`;
-  }
-  if(desejo){
-    html += `<div class="result-block">
-        <div class="result-label">O que você mais deseja hoje</div>
-        <div class="result-value">${esc(desejo)}</div>
-      </div>`;
-  }
-  if(corpo){
-    html += `<div class="result-block">
-        <div class="result-label">Onde o corpo guarda</div>
-        <div class="result-value">${esc(corpo)}</div>
-      </div>`;
-  }
+
+  // Parágrafo 5: pertencimento
   if(frase){
-    html += `<div class="result-block">
-        <div class="result-label">Sua frase de pertencimento</div>
-        <div class="result-value" style="font-family:var(--serif);font-style:italic;font-size:1.05em">"${esc(frase)}"</div>
-      </div>`;
+    html += `<p style="margin-bottom:14px">Você criou a frase: <em style="color:var(--gold-soft);font-family:var(--serif);font-size:1.08em">"${esc(frase)}"</em>. Essa é a sua chave. Quando a trava aparecer, repita essa frase em voz alta — você está dizendo ao seu sistema que ela tem lugar, e por isso pode soltar.</p>`;
   }
+
+  // Fechamento
+  html += `<p style="margin-top:18px;padding-top:18px;border-top:1px solid var(--line);color:var(--gold-soft)"><b style="font-weight:500">A flecha já foi forjada.</b> Ela aponta para o seu desejo. A trava virou direção. Agora é caminhar.</p>`;
 
   html += `</div>
 
-    <div class="ritual" style="border-left-color:var(--gold);margin-top:30px">
-      <span class="mark">"</span>
-      A trava que você acabou de mapear não é seu inimigo — é a <b>medida exata da potência</b> que você ainda não autorizou. Ela aponta para onde o seu poder quer crescer.
-      ${desejo?`<br><br>Você nomeou um desejo: <b>${esc(desejo)}</b>. A direção da sua flecha já foi escolhida.`:""}
-      ${corpo?`<br><br>Seu corpo guarda essa pista em <b>${esc(corpo)}</b>. Volte ali sempre que precisar lembrar que existe potência onde antes você só sentia trava.`:""}
-    </div>
+    <!-- Recapitulação compacta das respostas -->
+    <details style="margin-top:30px;border:1px solid var(--line);border-radius:14px;padding:0;overflow:hidden;background:rgba(0,0,0,.18)">
+      <summary style="cursor:pointer;padding:16px 20px;color:var(--gold-soft);font-family:var(--sans);font-size:13px;letter-spacing:.18em;text-transform:uppercase;font-weight:500">Ver minhas respostas detalhadas</summary>
+      <div style="padding:6px 20px 20px">`;
 
-    <p class="q-hint" style="margin-top:22px">Seu mapa ficou salvo neste dispositivo. Você pode voltar a ele a qualquer momento — só esta pessoa, neste navegador, tem acesso.</p>
+  const blocks = [
+    ["A trava", trava],
+    ["Primeira vez", primeira],
+    ["Pessoa associada", pessoa],
+    ["A relação", relacao],
+    ["Momentos de força", momentos.length?`<ul class="result-list">${momentos.map(m=>`<li>${m}</li>`).join("")}</ul>`:""],
+    ["Sentimentos vividos", sentimentos],
+    ["O que mais desejo", desejo],
+    ["Onde mora no corpo", corpo],
+    ["Frase de pertencimento", frase?`<span style="font-family:var(--serif);font-style:italic">"${esc(frase)}"</span>`:""]
+  ];
+
+  blocks.forEach(([label, value])=>{
+    if(value){
+      const v = (typeof value==="string" && !value.startsWith("<")) ? esc(value) : value;
+      html += `<div class="result-block">
+        <div class="result-label">${label}</div>
+        <div class="result-value">${v}</div>
+      </div>`;
+    }
+  });
+
+  html += `</div></details>
+
+    <p class="q-hint" style="margin-top:24px">💾 Seu mapa fica salvo neste dispositivo. Volte sempre que precisar.</p>
 
     <div class="actions">
-      <button class="btn" onclick="go('capture')">Receber meu mapa <span class="arr">→</span></button>
-      <button class="btn-text" onclick="stepIdx=${STEPS.length-1};renderStep();go('step')">Revisar o último passo</button>
+      <button class="btn" onclick="go('capture')">Continuar <span class="arr">→</span></button>
+      <button class="btn-text" onclick="stepIdx=${STEPS.length-1};renderStep();go('step')">Revisar última resposta</button>
     </div>
   </div>`;
 
