@@ -1,59 +1,70 @@
 MAPA DO PODER · Despertar Espiral
 =================================
 
-O que é este repositório
--------------------------
-Página única, interativa e imersiva da ferramenta "Mapa do Poder".
-100% estática (HTML + CSS + JavaScript). Não precisa de servidor,
-banco de dados nem build. Todas as respostas (nome, email, telefone
-e respostas dos 8 passos) ficam salvas APENAS no navegador da pessoa
-(localStorage) — nenhum dado é enviado para servidores externos.
-
-Arquivos
---------
-- index.html   -> a página
-- app.js       -> lógica (passos, resultado, captura, animações)
-- .htaccess    -> cache, compressão e segurança básica (Apache)
-- LEIA-ME.txt  -> este arquivo
-- deploy/      -> ZIP pronto para upload manual via cPanel/FTP
+Estrutura do repositório
+------------------------
+/
+├── mapa-do-poder/        <- conteúdo que aparece em /mapa-do-poder
+│   ├── index.html
+│   ├── app.js
+│   └── .htaccess
+├── deploy/
+│   └── mapa-do-poder.zip <- pacote para upload manual (cPanel/FTP)
+└── LEIA-ME.txt
 
 URL final
 ---------
 https://despertarespiral.com.br/mapa-do-poder
+
+A ferramenta é 100% estática (HTML+CSS+JS). Não precisa de servidor,
+banco nem build. Todas as respostas (nome, email, telefone e respostas
+dos 8 passos) ficam salvas APENAS no localStorage do navegador da
+pessoa. Nada é enviado a servidores externos.
 
 
 ==========================================
 Deploy por Git no Hostinger (recomendado)
 ==========================================
 
-1) Entre no hPanel do Hostinger.
-2) No domínio despertarespiral.com.br, vá em:
-   Avançado -> GIT  (ou "Acessar gerenciador Git")
-3) Clique em "Criar repositório":
-   - Repositório:  https://github.com/ThalesAndrades/mapadopoder.git
-   - Branch:       main
-   - Caminho do repositório:  public_html/mapa-do-poder
-4) Salvar. Hostinger faz o primeiro deploy automaticamente.
-5) (Opcional) Configure "Deploy automático" para que cada push em main
-   gere um pull automático no servidor. Ou clique em "Implementar"
-   manualmente sempre que quiser atualizar.
+Esta estrutura funciona com o caminho DEFAULT do Hostinger:
 
-Pronto: https://despertarespiral.com.br/mapa-do-poder está no ar.
+1) hPanel -> domínio despertarespiral.com.br
+2) Avançado -> GIT  (ou "Gerenciar repositórios Git")
+3) Criar repositório:
+   - URL:      https://github.com/ThalesAndrades/mapadopoder.git
+   - Branch:   main
+   - Caminho:  public_html        <- DEFAULT, não precisa mudar
+4) Salvar -> primeiro deploy automático.
+5) (Opcional) Ativar "Deploy automático" para cada push em main
+   gerar pull automático no servidor.
 
-Se precisar atualizar a ferramenta:
-   git add . && git commit -m "ajustes" && git push origin main
-   -> Hostinger detecta o push e atualiza (se auto-deploy estiver ativo)
+Resultado no servidor:
+   public_html/
+   ├── mapa-do-poder/index.html  -> servido em /mapa-do-poder
+   ├── mapa-do-poder/app.js
+   ├── mapa-do-poder/.htaccess
+   ├── deploy/mapa-do-poder.zip
+   └── LEIA-ME.txt
+
+URL ativa: https://despertarespiral.com.br/mapa-do-poder
+
+ATENÇÃO sobre o site existente em public_html
+---------------------------------------------
+O Git deploy do Hostinger ADICIONA os arquivos do repo em public_html.
+Se você já tem um site lá:
+- Arquivos existentes NO repo (mesmo nome) serão sobrescritos.
+- Arquivos NÃO presentes no repo seguem intactos.
+Como o repo agora só tem a pasta mapa-do-poder/, deploy/ e LEIA-ME.txt,
+seu site principal em public_html/index.html etc. permanece intocado.
 
 
 ===================================
-Deploy manual (cPanel / FTP / drag)
+Deploy manual (sem Git)
 ===================================
-
-Se preferir não usar Git:
 
 1) Baixe deploy/mapa-do-poder.zip
-2) Acesse o "File Manager" do Hostinger (em public_html)
-3) Crie a pasta "mapa-do-poder" dentro de public_html
+2) hPanel -> File Manager -> public_html
+3) Crie a pasta "mapa-do-poder" dentro de public_html (se não existir)
 4) Faça upload do ZIP, descompacte dentro dessa pasta
 5) Acesse https://despertarespiral.com.br/mapa-do-poder
 
@@ -62,19 +73,17 @@ Se preferir não usar Git:
 Onde ficam os dados da pessoa
 ==========================================
 
-Por padrão (CAPTURE_ENDPOINT = "" no topo do app.js), tudo fica
-salvo APENAS no localStorage do navegador da pessoa:
-- respostas dos 8 passos
-- nome, e-mail, telefone (último passo)
+Por padrão (CAPTURE_ENDPOINT = "" no topo do app.js):
+- Respostas dos 8 passos -> localStorage do navegador
+- Nome, e-mail, telefone (etapa opcional ao fim) -> localStorage
 
-Ninguém mais vê esses dados. Não há banco, não há envio externo.
+Ninguém mais vê esses dados. Sem banco, sem envio externo.
 
-Quer receber os contatos por e-mail (opcional)?
+Quer receber os contatos por e-mail? (opcional)
 -----------------------------------------------
-1) Crie uma conta gratuita no Formspree (https://formspree.io)
-   ou similar (Google Forms, RD Station, Mailchimp).
+1) Crie conta no Formspree (https://formspree.io) ou similar.
 2) Pegue a URL do endpoint (ex.: https://formspree.io/f/SEU_ID).
-3) No arquivo app.js, edite a linha:
+3) Em mapa-do-poder/app.js, edite:
 
       const CAPTURE_ENDPOINT = "";
 
@@ -82,23 +91,28 @@ Quer receber os contatos por e-mail (opcional)?
 
       const CAPTURE_ENDPOINT = "https://formspree.io/f/SEU_ID";
 
-4) Commit + push (se Git deploy) ou re-upload manual.
-
-Os contatos passarão a ser enviados para o endpoint além de ficarem
-salvos no navegador.
+4) Commit + push. Hostinger atualiza no próximo deploy.
 
 
 ===================
 Personalização
 ===================
-- Texto dos 8 passos:  variável STEPS no topo do app.js
-- Texto do ritual:     variável RITUAL_TEXT no app.js
-- Texto da síntese de resultado:  função renderResult() no app.js
-- Cores e fontes:      bloco :root no início do index.html
-- Voz do ritual:       Web Speech API do próprio dispositivo
+- Texto dos 8 passos:  variável STEPS em mapa-do-poder/app.js
+- Texto do ritual:     variável RITUAL_TEXT em mapa-do-poder/app.js
+- Síntese do resultado: função renderResult() em app.js
+- Leitura por região do corpo: const BODY_READINGS em app.js
+- Cores e fontes:      bloco :root em mapa-do-poder/index.html
+
+Perfis estratégicos
+-------------------
+Links para @despertarespiral e @drasunyannunes aparecem em:
+- Barra fixa (rodapé, sempre visível)
+- Hero (assinatura)
+- Intro (rodapé do card)
+- Done (seção "Continue a jornada")
 
 
 ===================
 Manutenção
 ===================
-Mantenha sempre index.html e app.js juntos, no mesmo diretório.
+Mantenha sempre index.html e app.js juntos na pasta mapa-do-poder/.
