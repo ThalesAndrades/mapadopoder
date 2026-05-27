@@ -329,17 +329,16 @@ function renderResult(){
   const pessoa = (data.pessoa||"").trim();
   const relacao = (data.relacao||"").trim();
 
-  const saudacao = nome ? `${esc(nome)},` : "Olha só o que você acabou de fazer:";
+  const saudacao = nome ? `${esc(nome)},` : "Olha o que você acabou de construir:";
   const corpoLeitura = corpo && BODY_READINGS[corpo] ? BODY_READINGS[corpo] : "";
 
   let html = `<div class="stagger">
-    <p class="eyebrow">✦ Seu Mapa do Poder</p>
-    <h2 style="margin-top:18px">${saudacao}<br><em>aqui está o que apareceu</em></h2>
-    <p class="body" style="margin-top:22px">Este é o seu mapa — costurado a partir das suas próprias respostas. Releia com calma. Ele não foi escrito por mim, foi escrito por você.</p>
+    <p class="eyebrow">Seu Mapa</p>
+    <h2 style="margin-top:16px">${saudacao}<br><em>aqui está sua leitura</em></h2>
+    <p class="body" style="margin-top:20px">Este é o seu mapa, costurado a partir das suas próprias respostas. Releia com calma — ele não foi escrito por mim, foi escrito por você.</p>
 
     <!-- Leitura narrativa: o coração do resultado -->
-    <div class="ritual" style="border-left-color:var(--gold);margin-top:26px;font-style:normal;font-family:var(--sans);font-size:clamp(15px,3.8vw,17px);line-height:1.7;color:var(--cream)">
-      <span class="mark">✦</span>`;
+    <div class="ritual" style="border-left-color:var(--gold);margin-top:24px;font-style:normal;font-family:var(--sans);font-size:clamp(15px,3.7vw,16px);line-height:1.75;color:var(--cream)">`;
 
   // Parágrafo 1: a trava nomeada
   if(trava){
@@ -407,7 +406,7 @@ function renderResult(){
 
   html += `</div></details>
 
-    <p class="q-hint" style="margin-top:24px">💾 Seu mapa fica salvo neste dispositivo. Volte sempre que precisar.</p>
+    <p class="q-hint" style="margin-top:22px">Seu mapa fica salvo neste dispositivo. Volte sempre que precisar.</p>
 
     <div class="actions">
       <button class="btn" onclick="go('capture')">Continuar <span class="arr">→</span></button>
