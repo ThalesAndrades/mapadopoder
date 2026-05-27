@@ -89,6 +89,15 @@ function go(name){
   const showBar = (name==="step");
   document.getElementById("topbar").classList.toggle("hidden", !showBar);
   show(el);
+  if(name==="capture") prefillCapture();
+}
+function prefillCapture(){
+  const n=document.getElementById("cap-nome");
+  const e=document.getElementById("cap-email");
+  const p=document.getElementById("cap-phone");
+  if(n) n.value=data.nome||"";
+  if(e) e.value=data.email||"";
+  if(p) p.value=data.phone||"";
 }
 function startSteps(){ stepIdx=0; renderStep(); go("step"); }
 
@@ -167,7 +176,7 @@ function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",
 
 function nextStep(){
   if(stepIdx<STEPS.length-1){ stepIdx++; renderStep(); }
-  else { go("capture"); }
+  else { renderResult(); go("result"); }
 }
 function prevStep(){
   if(stepIdx>0){ stepIdx--; renderStep(); }
@@ -293,18 +302,106 @@ function initViz(){
 function easeOut(t){ return 1-Math.pow(1-t,3); }
 function transformedFromData(){ return false; }
 
-/* ---------- Captura de contato ---------- */
+/* ---------- Tela de Resultado: síntese personalizada ---------- */
+function renderResult(){
+  const host=document.querySelector('.screen[data-screen="result"]');
+  const trava = (data.trava||"").trim();
+  const corpo = (data.corpo||"").trim();
+  const desejo = (data.desejo||"").trim();
+  const frase = (data.frase_vinculo||"").trim();
+  const momentos = [data.momento1, data.momento2, data.momento3].filter(m=>(m||"").trim()).map(m=>esc(m));
+  const sentimentos = (data.sentimentos||"").trim();
+  const primeira = (data.primeira_vez||"").trim();
+  const pessoa = (data.pessoa||"").trim();
+  const relacao = (data.relacao||"").trim();
+
+  let html = `<div class="stagger">
+    <p class="eyebrow">Seu Mapa</p>
+    <h2 style="margin-top:18px">A leitura do seu <em>poder</em></h2>
+    <p class="body" style="margin-top:22px">Este é o seu mapa, costurado a partir do que você reconheceu nos 8 passos. Releia com calma — ele revela onde a sua trava virou direção.</p>
+
+    <div class="card">
+      <div class="result-block">
+        <div class="result-label">A trava que você nomeou</div>
+        <div class="result-value">${trava?esc(trava):"<i>(não respondida)</i>"}</div>
+      </div>`;
+
+  if(primeira || pessoa){
+    html += `<div class="result-block">
+        <div class="result-label">De onde ela vem</div>
+        <div class="result-value">${primeira?esc(primeira):""}${pessoa?`<br><span class="result-sub">Perto de: ${esc(pessoa)}</span>`:""}</div>
+      </div>`;
+  }
+  if(relacao){
+    html += `<div class="result-block">
+        <div class="result-label">A relação por trás dela</div>
+        <div class="result-value">${esc(relacao)}</div>
+      </div>`;
+  }
+  if(momentos.length){
+    html += `<div class="result-block">
+        <div class="result-label">Momentos em que você já avançou</div>
+        <div class="result-value"><ul class="result-list">${momentos.map(m=>`<li>${m}</li>`).join("")}</ul></div>
+      </div>`;
+  }
+  if(sentimentos){
+    html += `<div class="result-block">
+        <div class="result-label">A força que você já viveu</div>
+        <div class="result-value">${esc(sentimentos)}</div>
+      </div>`;
+  }
+  if(desejo){
+    html += `<div class="result-block">
+        <div class="result-label">O que você mais deseja hoje</div>
+        <div class="result-value">${esc(desejo)}</div>
+      </div>`;
+  }
+  if(corpo){
+    html += `<div class="result-block">
+        <div class="result-label">Onde o corpo guarda</div>
+        <div class="result-value">${esc(corpo)}</div>
+      </div>`;
+  }
+  if(frase){
+    html += `<div class="result-block">
+        <div class="result-label">Sua frase de pertencimento</div>
+        <div class="result-value" style="font-family:var(--serif);font-style:italic;font-size:1.05em">"${esc(frase)}"</div>
+      </div>`;
+  }
+
+  html += `</div>
+
+    <div class="ritual" style="border-left-color:var(--gold);margin-top:30px">
+      <span class="mark">"</span>
+      A trava que você acabou de mapear não é seu inimigo — é a <b>medida exata da potência</b> que você ainda não autorizou. Ela aponta para onde o seu poder quer crescer.
+      ${desejo?`<br><br>Você nomeou um desejo: <b>${esc(desejo)}</b>. A direção da sua flecha já foi escolhida.`:""}
+      ${corpo?`<br><br>Seu corpo guarda essa pista em <b>${esc(corpo)}</b>. Volte ali sempre que precisar lembrar que existe potência onde antes você só sentia trava.`:""}
+    </div>
+
+    <p class="q-hint" style="margin-top:22px">Seu mapa ficou salvo neste dispositivo. Você pode voltar a ele a qualquer momento — só esta pessoa, neste navegador, tem acesso.</p>
+
+    <div class="actions">
+      <button class="btn" onclick="go('capture')">Receber meu mapa <span class="arr">→</span></button>
+      <button class="btn-text" onclick="stepIdx=${STEPS.length-1};renderStep();go('step')">Revisar o último passo</button>
+    </div>
+  </div>`;
+
+  host.innerHTML = html;
+}
+
+/* ---------- Captura de contato (último: nome, email, telefone) ---------- */
 async function submitCapture(){
+  const nome=document.getElementById("cap-nome").value.trim();
   const email=document.getElementById("cap-email").value.trim();
   const phone=document.getElementById("cap-phone").value.trim();
   const btn=document.getElementById("cap-send");
-  data.email=email; data.phone=phone; save();
-  if(!email && !phone){ go("done"); return; }
+  data.nome=nome; data.email=email; data.phone=phone; save();
+  if(!nome && !email && !phone){ go("done"); return; }
   btn.textContent="Enviando…"; btn.disabled=true;
   if(CAPTURE_ENDPOINT){
     try{
       await fetch(CAPTURE_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},
-        body:JSON.stringify({email,phone,fonte:"mapa-da-ativacao-do-poder"})});
+        body:JSON.stringify({nome,email,phone,fonte:"mapa-do-poder"})});
     }catch(e){}
   }
   go("done");
@@ -317,7 +414,7 @@ function restart(){
   }
 }
 function shareIt(){
-  const url="https://despertarespiral.com/mapa";
+  const url="https://despertarespiral.com.br/mapa-do-poder";
   const text="Acabei de fazer o Mapa da Ativação do Poder do Despertar Espiral 🌟";
   if(navigator.share){ navigator.share({title:"Mapa da Ativação do Poder",text,url}).catch(()=>{}); }
   else { navigator.clipboard?.writeText(url); alert("Link copiado: "+url); }
@@ -353,5 +450,6 @@ function shareIt(){
 
 /* expõe handlers no escopo global */
 window.go=go; window.startSteps=startSteps; window.nextStep=nextStep;
-window.prevStep=prevStep; window.submitCapture=submitCapture;
+window.prevStep=prevStep; window.renderResult=renderResult;
+window.submitCapture=submitCapture;
 window.restart=restart; window.shareIt=shareIt;
