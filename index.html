@@ -9,6 +9,8 @@
 <meta property="og:title" content="Mapa da Ativação do Poder">
 <meta property="og:description" content="Transforme a trava que mais te paralisa na sua maior potência. Uma experiência guiada, gratuita.">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://despertarespiral.com.br/mapa-do-poder">
+<link rel="canonical" href="https://despertarespiral.com.br/mapa-do-poder">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -199,6 +201,21 @@ textarea:focus,input:focus{outline:none;border-color:var(--gold-deep);
 @media(prefers-reduced-motion:reduce){
   *{animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
+
+/* tela de RESULTADO */
+.result-block{padding:18px 0;border-bottom:1px solid var(--line)}
+.result-block:first-child{padding-top:0}
+.result-block:last-child{border-bottom:none;padding-bottom:0}
+.result-label{font-family:var(--sans);font-weight:500;font-size:11px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--gold-deep);margin-bottom:8px}
+.result-value{font-family:var(--serif);font-size:clamp(17px,4.4vw,21px);
+  line-height:1.5;color:var(--cream)}
+.result-value i{color:var(--muted);font-style:italic;font-size:.85em}
+.result-sub{font-family:var(--sans);font-size:13px;color:var(--cream-dim);
+  letter-spacing:.02em}
+.result-list{margin:0;padding-left:22px}
+.result-list li{margin-bottom:6px;color:var(--cream-dim)}
+.result-list li:last-child{margin-bottom:0}
 </style>
 </head>
 <body>
@@ -247,25 +264,32 @@ textarea:focus,input:focus{outline:none;border-color:var(--gold-deep);
   <!-- PASSOS dinâmicos -->
   <section class="screen" data-screen="step"></section>
 
-  <!-- CAPTURA -->
+  <!-- RESULTADO (síntese personalizada, renderizada por JS) -->
+  <section class="screen" data-screen="result"></section>
+
+  <!-- CAPTURA (nome + email + telefone, salvos localmente) -->
   <section class="screen" data-screen="capture">
     <div class="stagger">
-      <p class="eyebrow">Quase lá</p>
-      <h2 style="margin-top:18px">Continue <em>despertando</em></h2>
-      <p class="body" style="margin-top:20px">O Despertar Espiral cria novas ferramentas como esta. Se quiser, deixe seu contato para receber as próximas — sem spam, no seu tempo.</p>
+      <p class="eyebrow">Último passo</p>
+      <h2 style="margin-top:18px">Receba seu <em>mapa</em></h2>
+      <p class="body" style="margin-top:20px">Seu mapa fica salvo neste navegador. Se quiser receber novas ferramentas e lembretes do Despertar Espiral, deixe seus dados abaixo — eles ficam guardados localmente nesta página.</p>
       <div class="card">
         <div class="field">
-          <label for="cap-email">E-mail <span style="color:var(--muted)">(opcional)</span></label>
+          <label for="cap-nome">Nome</label>
+          <input type="text" id="cap-nome" placeholder="Como você quer ser chamada" autocomplete="name">
+        </div>
+        <div class="field">
+          <label for="cap-email">E-mail</label>
           <input type="email" id="cap-email" placeholder="seunome@exemplo.com" autocomplete="email">
         </div>
         <div class="field">
-          <label for="cap-phone">WhatsApp / Telefone <span style="color:var(--muted)">(opcional)</span></label>
+          <label for="cap-phone">WhatsApp / Telefone</label>
           <input type="tel" id="cap-phone" placeholder="(00) 00000-0000" autocomplete="tel">
         </div>
-        <p class="privacy">Ao enviar, você concorda em receber comunicações do Despertar Espiral. Você pode sair quando quiser.</p>
+        <p class="privacy">Seus dados ficam salvos apenas neste dispositivo (localStorage do navegador). Nenhuma informação é enviada para servidores externos.</p>
       </div>
       <div class="actions">
-        <button class="btn" id="cap-send" onclick="submitCapture()">Receber as ferramentas <span class="arr">→</span></button>
+        <button class="btn" id="cap-send" onclick="submitCapture()">Concluir o mapa <span class="arr">→</span></button>
         <button class="btn-text" onclick="go('done')">Pular esta etapa</button>
       </div>
     </div>
