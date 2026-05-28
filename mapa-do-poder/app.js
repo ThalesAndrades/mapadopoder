@@ -141,13 +141,19 @@ function renderStep(){
   host.querySelectorAll("[data-k]").forEach(inp=>{
     inp.addEventListener("input",e=>{ data[e.target.dataset.k]=e.target.value; save(); });
   });
-  // body zones
-  host.querySelectorAll(".zone").forEach(z=>{
-    if(data.corpo===z.dataset.z) z.classList.add("sel");
-    z.addEventListener("click",()=>{
-      host.querySelectorAll(".zone").forEach(x=>x.classList.remove("sel"));
-      z.classList.add("sel"); data.corpo=z.dataset.z; save();
-    });
+  // body zones (SVG + fallback chips)
+  const selectBodyZone = (zoneName)=>{
+    host.querySelectorAll(".zsvg,.zone").forEach(x=>x.classList.remove("sel"));
+    host.querySelectorAll(`[data-z="${zoneName}"]`).forEach(x=>x.classList.add("sel"));
+    data.corpo=zoneName; save();
+    const lbl=host.querySelector("#bodyLabel");
+    if(lbl) lbl.textContent=zoneName;
+  };
+  if(data.corpo){
+    host.querySelectorAll(`[data-z="${data.corpo}"]`).forEach(x=>x.classList.add("sel"));
+  }
+  host.querySelectorAll(".zsvg,.zone").forEach(z=>{
+    z.addEventListener("click",()=>selectBodyZone(z.dataset.z));
   });
   // ritual read aloud
   const ra=host.querySelector(".read-aloud");
@@ -155,13 +161,60 @@ function renderStep(){
   // viz
   if(host.querySelector("#viz")) initViz();
 
+  // auto-focus primeiro campo (apenas desktop; mobile evita teclado pulando)
+  if(matchMedia("(min-width:768px) and (hover:hover)").matches){
+    const first=host.querySelector("textarea, input[type=text]");
+    if(first && !first.value) setTimeout(()=>first.focus({preventScroll:true}),250);
+  }
+
   updateProgress();
 }
 
 function bodyMarkup(){
-  return `<div class="bodymap"><div class="zones">`+
-    BODY_ZONES.map(z=>`<button class="zone" data-z="${z}">${z}</button>`).join("")+
-    `</div></div>`;
+  return `
+  <div class="bodymap">
+    <div class="body-figure">
+      <svg viewBox="0 0 200 400" xmlns="http://www.w3.org/2000/svg" class="body-svg" aria-label="Mapa do corpo - toque para selecionar uma região">
+        <!-- silhueta decorativa -->
+        <g class="silhouette" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <!-- cabeça -->
+          <ellipse cx="100" cy="36" rx="24" ry="28"/>
+          <!-- pescoço -->
+          <path d="M88,62 L88,78 Q100,82 112,78 L112,62"/>
+          <!-- torso/ombros -->
+          <path d="M52,92 Q68,82 88,78 Q100,76 112,78 Q132,82 148,92 Q156,98 154,124 Q150,170 144,232 L56,232 Q50,170 46,124 Q44,98 52,92 Z"/>
+          <!-- braços (linha simples) -->
+          <path d="M52,92 Q44,150 40,210 Q38,232 40,248"/>
+          <path d="M148,92 Q156,150 160,210 Q162,232 160,248"/>
+          <!-- linha central pernas -->
+          <path d="M100,232 L100,300"/>
+          <!-- pernas -->
+          <path d="M56,232 Q60,310 64,392"/>
+          <path d="M76,232 Q78,310 82,392"/>
+          <path d="M144,232 Q140,310 136,392"/>
+          <path d="M124,232 Q122,310 118,392"/>
+        </g>
+        <!-- zonas clicáveis (ordem importa: maiores primeiro) -->
+        <g class="zones-svg">
+          <rect   class="zsvg" data-z="Pernas"   x="50" y="236" width="100" height="160" rx="40"/>
+          <rect   class="zsvg" data-z="Peito"    x="60" y="82"  width="80"  height="40"  rx="14"/>
+          <rect   class="zsvg" data-z="Estômago" x="68" y="128" width="64"  height="28"  rx="12"/>
+          <rect   class="zsvg" data-z="Ventre"   x="70" y="160" width="60"  height="40"  rx="14"/>
+          <circle class="zsvg" data-z="Ombros"   cx="58"  cy="92"  r="16"/>
+          <circle class="zsvg" data-z="Ombros"   cx="142" cy="92"  r="16"/>
+          <circle class="zsvg" data-z="Coração"  cx="84"  cy="106" r="14"/>
+          <ellipse class="zsvg" data-z="Cabeça"  cx="100" cy="36"  rx="26" ry="30"/>
+          <rect   class="zsvg" data-z="Garganta" x="84" y="60" width="32" height="22" rx="8"/>
+          <circle class="zsvg" data-z="Mãos"     cx="38"  cy="252" r="16"/>
+          <circle class="zsvg" data-z="Mãos"     cx="162" cy="252" r="16"/>
+        </g>
+      </svg>
+      <div class="body-label" id="bodyLabel">${data.corpo||"Toque uma região"}</div>
+    </div>
+    <div class="zones-fallback">
+      <button class="zone" data-z="Costas" type="button">↻ Costas</button>
+    </div>
+  </div>`;
 }
 function ritualMarkup(){
   return `<div class="ritual"><span class="mark">“</span>${RITUAL_TEXT.replace(/—/g,"—")}</div>
@@ -332,11 +385,24 @@ function renderResult(){
   const saudacao = nome ? `${esc(nome)},` : "Olha o que você acabou de construir:";
   const corpoLeitura = corpo && BODY_READINGS[corpo] ? BODY_READINGS[corpo] : "";
 
+  // chips de insights rápidos no topo
+  const insights = [];
+  if(trava) insights.push({label:"Trava", value:trava.length>40?trava.slice(0,38)+"…":trava});
+  if(corpo) insights.push({label:"Corpo", value:corpo});
+  if(desejo) insights.push({label:"Desejo", value:desejo.length>40?desejo.slice(0,38)+"…":desejo});
+
   let html = `<div class="stagger">
     <p class="eyebrow">Seu Mapa</p>
     <h2 style="margin-top:16px">${saudacao}<br><em>aqui está sua leitura</em></h2>
-    <p class="body" style="margin-top:20px">Este é o seu mapa, costurado a partir das suas próprias respostas. Releia com calma — ele não foi escrito por mim, foi escrito por você.</p>
+    <p class="body" style="margin-top:20px">Este é o seu mapa, costurado a partir das suas próprias respostas. Releia com calma — ele não foi escrito por mim, foi escrito por você.</p>`;
 
+  if(insights.length){
+    html += `<div class="insights">`+
+      insights.map(i=>`<div class="insight"><span class="insight-label">${i.label}</span><span class="insight-value">${esc(i.value)}</span></div>`).join("")+
+      `</div>`;
+  }
+
+  html += `
     <!-- Leitura narrativa: o coração do resultado -->
     <div class="ritual" style="border-left-color:var(--gold);margin-top:24px;font-style:normal;font-family:var(--sans);font-size:clamp(15px,3.7vw,16px);line-height:1.75;color:var(--cream)">`;
 
@@ -410,8 +476,9 @@ function renderResult(){
 
     <div class="actions">
       <button class="btn" onclick="go('capture')">Continuar <span class="arr">→</span></button>
-      <button class="btn-text" onclick="stepIdx=${STEPS.length-1};renderStep();go('step')">Revisar última resposta</button>
+      <button class="btn-ghost" onclick="window.print()" type="button">Imprimir / salvar PDF</button>
     </div>
+    <button class="btn-text" onclick="stepIdx=${STEPS.length-1};renderStep();go('step')" style="margin-top:6px">Revisar última resposta</button>
   </div>`;
 
   host.innerHTML = html;
@@ -443,8 +510,8 @@ function restart(){
 }
 function shareIt(){
   const url="https://despertarespiral.com.br/mapa-do-poder";
-  const text="Acabei de fazer o Mapa da Ativação do Poder do Despertar Espiral 🌟";
-  if(navigator.share){ navigator.share({title:"Mapa da Ativação do Poder",text,url}).catch(()=>{}); }
+  const text="Acabei de fazer o Mapa do Poder — uma ferramenta do Método Despertar Espiral.";
+  if(navigator.share){ navigator.share({title:"Mapa do Poder",text,url}).catch(()=>{}); }
   else { navigator.clipboard?.writeText(url); alert("Link copiado: "+url); }
 }
 
@@ -453,27 +520,36 @@ function shareIt(){
    ============================================================ */
 (function(){
   const cv=document.getElementById("stars"); const ctx=cv.getContext("2d");
-  let stars=[],W,H,dpr=Math.min(devicePixelRatio||1,2);
+  let stars=[],W,H,dpr=Math.min(devicePixelRatio||1,2),raf=null,t=0;
+  // densidade menor no mobile (perf/battery)
+  const isMobile = matchMedia("(max-width:768px)").matches;
+  const reduceMotion = matchMedia("(prefers-reduced-motion:reduce)").matches;
   function resize(){
     W=cv.width=innerWidth*dpr; H=cv.height=innerHeight*dpr;
     cv.style.width=innerWidth+"px"; cv.style.height=innerHeight+"px";
-    const count=Math.round(innerWidth*innerHeight/14000);
+    const divisor = isMobile?22000:14000;
+    const count=Math.round(innerWidth*innerHeight/divisor);
     stars=[]; for(let i=0;i<count;i++) stars.push({
       x:Math.random()*W,y:Math.random()*H,r:(Math.random()*1.3+.2)*dpr,
       p:Math.random()*6,sp:Math.random()*.4+.1});
   }
   resize(); addEventListener("resize",resize);
-  let t=0;
-  (function loop(){
-    t+=0.01; ctx.clearRect(0,0,W,H);
+  function loop(){
+    if(!reduceMotion) t+=0.01;
+    ctx.clearRect(0,0,W,H);
     for(const s of stars){
-      const tw=.35+.65*Math.abs(Math.sin(t*s.sp*4+s.p));
+      const tw=reduceMotion?.5:(.35+.65*Math.abs(Math.sin(t*s.sp*4+s.p)));
       ctx.globalAlpha=tw*.5;
       ctx.fillStyle= tw>.85 ? "#E4CE9C" : "#C9A862";
       ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,7); ctx.fill();
     }
-    ctx.globalAlpha=1; requestAnimationFrame(loop);
-  })();
+    ctx.globalAlpha=1;
+    raf=requestAnimationFrame(loop);
+  }
+  function start(){ if(!raf) raf=requestAnimationFrame(loop); }
+  function stop(){ if(raf){cancelAnimationFrame(raf); raf=null;} }
+  document.addEventListener("visibilitychange",()=>{ document.hidden?stop():start(); });
+  start();
 })();
 
 /* expõe handlers no escopo global */
