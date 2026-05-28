@@ -225,14 +225,42 @@ textarea:focus,input:focus{
 }
 .q-hint{font-size:14px;color:var(--cream-dim);margin-top:12px;line-height:1.65}
 
-/* BODY MAP (passo 6) */
+/* BODY MAP (passo 6) — silhueta SVG */
 .bodymap{margin-top:24px}
-.zones{display:flex;flex-wrap:wrap;gap:8px}
+.body-figure{
+  display:flex;flex-direction:column;align-items:center;
+  padding:22px 12px 14px;
+  background:radial-gradient(ellipse at 50% 30%, rgba(168,130,63,.07), transparent 65%);
+  border:1px solid var(--line);border-radius:var(--radius-lg);
+}
+.body-svg{
+  width:100%;max-width:240px;height:auto;display:block;
+  filter:drop-shadow(0 6px 18px rgba(0,0,0,.25));
+}
+.body-svg .silhouette{
+  fill:none;stroke:var(--line-strong);stroke-width:1.2;
+}
+.body-svg .zsvg{
+  fill:rgba(201,168,98,0);stroke:transparent;stroke-width:1.4;
+  cursor:pointer;transition:fill .25s var(--ease),stroke .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.body-svg .zsvg:hover{fill:rgba(201,168,98,.16);stroke:var(--gold-deep)}
+.body-svg .zsvg.sel{
+  fill:rgba(228,206,156,.32);stroke:var(--gold);stroke-width:1.8;
+  filter:drop-shadow(0 0 6px rgba(228,206,156,.4));
+}
+.body-label{
+  margin-top:14px;font-family:var(--sans);font-size:12px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--gold-soft);font-weight:500;
+  min-height:18px;text-align:center;
+}
+.zones-fallback{display:flex;justify-content:center;gap:8px;margin-top:14px}
 .zone{
-  padding:13px 18px;border-radius:100px;border:1px solid var(--line);
+  padding:11px 18px;border-radius:100px;border:1px solid var(--line);
   background:rgba(0,0,0,.2);color:var(--cream-dim);cursor:pointer;
-  font-family:var(--sans);font-size:14px;font-weight:400;
-  min-height:44px;display:inline-flex;align-items:center;
+  font-family:var(--sans);font-size:13px;font-weight:400;letter-spacing:.04em;
+  min-height:44px;display:inline-flex;align-items:center;gap:6px;
   transition:all .22s var(--ease);
   -webkit-tap-highlight-color:transparent;
 }
@@ -413,6 +441,57 @@ textarea:focus,input:focus{
   border-top:1px solid var(--line);border-bottom:1px solid var(--line);
 }
 @media(min-width:560px){.continue-block{padding:28px 24px}}
+
+/* INSIGHTS chips no topo do resultado */
+.insights{
+  display:grid;grid-template-columns:1fr;gap:8px;margin-top:22px;
+}
+@media(min-width:560px){
+  .insights{grid-template-columns:repeat(3,1fr);gap:10px}
+}
+.insight{
+  display:flex;flex-direction:column;gap:4px;
+  padding:12px 14px;border-radius:12px;
+  background:linear-gradient(160deg,rgba(42,33,23,.6),rgba(31,24,16,.6));
+  border:1px solid var(--line);
+}
+.insight-label{
+  font-family:var(--sans);font-size:10px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--gold-deep);font-weight:500;
+}
+.insight-value{
+  font-family:var(--serif);font-size:15px;line-height:1.35;
+  color:var(--cream);
+}
+
+/* PRINT — mapa limpo em A4/PDF */
+@media print{
+  *{box-shadow:none!important;text-shadow:none!important;animation:none!important;
+    transition:none!important}
+  body{background:#fff!important;color:#1a130a!important}
+  body::before,#stars,.aurora,.topbar,.social-bar,.saved-flag,
+  .actions,.btn,.btn-ghost,.btn-text,.profile-line,.viz-wrap,
+  .read-aloud,details summary,.skip-strong{display:none!important}
+  details[open] summary{display:none!important}
+  details{border:none!important;background:none!important}
+  .screen{display:none!important}
+  .screen[data-screen="result"]{display:block!important;
+    max-width:100%!important;padding:0!important;margin:0!important}
+  .stage{padding:18px!important;display:block!important;min-height:auto!important}
+  .ritual{background:#faf6ed!important;border:1px solid #d8c89a!important;
+    color:#1a130a!important;font-style:normal!important;border-left:3px solid #a8823f!important}
+  .ritual b{color:#7a5a22!important}
+  .ritual .mark{display:none!important}
+  .card,.insight{background:#faf6ed!important;border:1px solid #e0d4ad!important;color:#1a130a!important}
+  .insight-label,.result-label{color:#7a5a22!important}
+  .insight-value,.result-value{color:#1a130a!important}
+  .eyebrow{color:#7a5a22!important}
+  h1,h2{color:#1a130a!important}
+  h1 em,h2 em{color:#7a5a22!important}
+  .body,p{color:#1a130a!important}
+  .q-hint{display:none!important}
+  a{color:#1a130a!important;text-decoration:none!important}
+}
 </style>
 </head>
 <body>
