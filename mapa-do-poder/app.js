@@ -10,23 +10,31 @@ const CAPTURE_ENDPOINT = "";
 
 /* ---------- Definição dos 8 passos ---------- */
 const STEPS = [
-  { n:1, title:"Escreva sua trava principal em uma frase.",
-    hint:"Qual é o bloqueio que mais pesa hoje?",
-    fields:[{k:"trava", t:"textarea", ph:"Hoje, a trava que mais me pesa é…"}] },
+  { n:1,
+    title:"Qual trava te trava hoje?",
+    hint:"A primeira que vier. Não pense demais — é o seu corpo que sabe.",
+    icon:'knot',
+    fields:[{k:"trava", t:"textarea", ph:"Hoje, o que me paralisa é…"}] },
 
-  { n:2, title:"Quando essa trava começou?",
-    hint:"Procure lembrar a primeira vez que sentiu essa trava e reconheça quem estava — ou ainda está — perto de você quando ela aparece.",
+  { n:2,
+    title:"Quando essa trava entrou em você?",
+    hint:"Volte ao primeiro momento que conseguir lembrar. Não precisa ser a verdade absoluta — é a sua verdade.",
+    icon:'spiral',
     fields:[
       {k:"primeira_vez", t:"textarea", ph:"A primeira vez que senti isso foi…"},
       {k:"pessoa", t:"text", label:"Quem estava perto?", ph:"Nome ou papel dessa pessoa"}
     ] },
 
-  { n:3, title:"Que tipo de relação você tem com essa pessoa?",
-    hint:"Quem protege quem nessa relação?",
+  { n:3,
+    title:"O que essa pessoa carrega de você?",
+    hint:"As pessoas que ativam nossas travas costumam carregar algo que ainda precisamos integrar. Quem protege quem aí?",
+    icon:'venn',
     fields:[{k:"relacao", t:"textarea", ph:"Nossa relação é… / Quem protege quem é…"}] },
 
-  { n:4, title:"Lembre-se da sua força.",
-    hint:"Liste 3 momentos em que você avançou sem que a trava se manifestasse — ou em que seguiu mesmo com ela. E 3 sentimentos que viveu ali.",
+  { n:4,
+    title:"Você já avançou antes. Lembra?",
+    hint:"Liste 3 momentos em que seguiu mesmo com medo — e 3 sentimentos que viveu ali. Essa é a sua prova viva de que o caminho existe.",
+    icon:'pillars',
     fields:[
       {k:"momento1", t:"text", label:"Momento 1", ph:"Uma vez em que avancei…"},
       {k:"momento2", t:"text", label:"Momento 2", ph:"Outra vez…"},
@@ -34,25 +42,82 @@ const STEPS = [
       {k:"sentimentos", t:"text", label:"3 sentimentos que senti", ph:"ex.: coragem, alívio, orgulho"}
     ] },
 
-  { n:5, title:"O que você mais deseja hoje?",
-    hint:"E que essa trava está te impedindo de alcançar.",
-    fields:[{k:"desejo", t:"textarea", ph:"O que eu mais desejo hoje é…"}] },
+  { n:5,
+    title:"O que pulsa em você como desejo agora?",
+    hint:"Aquilo que, se acontecesse, mudaria tudo. Pode ser pequeno. Pode ser enorme. Nomeie sem editar.",
+    icon:'star',
+    fields:[{k:"desejo", t:"textarea", ph:"Se eu pudesse pedir uma coisa para a vida hoje, seria…"}] },
 
-  { n:6, title:"Onde o seu corpo guarda essa trava?",
-    hint:"Qual parte do corpo se tensiona quando você identifica isso? Toque para selecionar.",
+  { n:6,
+    title:"Onde, no corpo, mora essa trava?",
+    hint:"Sinta. Não pense. Toque a região que pulsa, aperta ou se contrai quando você imagina a trava.",
+    icon:'body',
     fields:[{k:"corpo", t:"body"}] },
 
-  { n:7, title:"Crie um vínculo de pertencimento.",
-    hint:"Crie uma frase para acolher essa trava — e então faça este ritual em voz alta, com calma.",
+  { n:7,
+    title:"Acolha essa trava. Diga que ela tem lugar.",
+    hint:"Você não precisa expulsar — precisa incluir. Crie sua frase de aceitação e leia o ritual em voz alta.",
+    icon:'infinity',
     fields:[
       {k:"frase_vinculo", t:"text", label:"Sua frase de pertencimento", ph:"Trava querida, eu te aceito porque…"},
       {k:"ritual", t:"ritual"}
     ] },
 
-  { n:8, title:"Transforme a trava em direção.",
-    hint:"Toque na estrela e dê brilho a ela. Quando ofuscar seus olhos, ela vira uma flecha certeira — que você colocará, mentalmente, sob o seu travesseiro.",
+  { n:8,
+    title:"Agora, transforme a trava em flecha.",
+    hint:"Toque na estrela e dê brilho. Quando ofuscar seus olhos, ela vira a direção do seu desejo.",
+    icon:'arrow',
     fields:[{k:"viz", t:"viz"}] }
 ];
+
+const STEP_LABELS = ["Trava","Origem","Relação","Força","Desejo","Corpo","Acolhimento","Direção"];
+
+/* Ícones SVG por passo — line work dourado, minimalista */
+const STEP_ICONS = {
+  knot: `<svg viewBox="0 0 60 60" class="step-svg" aria-hidden="true">
+    <path d="M20 18 C30 8, 50 14, 44 30 C40 42, 22 44, 16 32 C12 22, 28 14, 38 24 C46 32, 34 42, 24 38" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+  </svg>`,
+  spiral: `<svg viewBox="0 0 60 60" class="step-svg" aria-hidden="true">
+    <path d="M30 30 m0 -2 a 2 2 0 1 1 -2 2 a 4 4 0 1 1 4 -4 a 7 7 0 1 1 -7 7 a 11 11 0 1 1 11 -11 a 15 15 0 1 1 -15 15 a 19 19 0 1 1 19 -19" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+  </svg>`,
+  venn: `<svg viewBox="0 0 60 60" class="step-svg" aria-hidden="true">
+    <circle cx="22" cy="30" r="14" fill="none" stroke="currentColor" stroke-width="1.4"/>
+    <circle cx="38" cy="30" r="14" fill="none" stroke="currentColor" stroke-width="1.4"/>
+  </svg>`,
+  pillars: `<svg viewBox="0 0 60 60" class="step-svg" aria-hidden="true">
+    <rect x="12" y="38" width="8" height="14" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/>
+    <rect x="26" y="28" width="8" height="24" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/>
+    <rect x="40" y="18" width="8" height="34" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/>
+    <path d="M44 14 l1.5 3 l3 .4 l-2.2 2 l.5 3 l-2.8 -1.5 l-2.8 1.5 l.5 -3 l-2.2 -2 l3 -.4 z" fill="currentColor" stroke="none"/>
+  </svg>`,
+  star: `<svg viewBox="0 0 60 60" class="step-svg" aria-hidden="true">
+    <g stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none">
+      <path d="M30 8 L30 18 M30 42 L30 52 M8 30 L18 30 M42 30 L52 30"/>
+      <path d="M14.5 14.5 L21.5 21.5 M38.5 38.5 L45.5 45.5 M14.5 45.5 L21.5 38.5 M38.5 21.5 L45.5 14.5"/>
+    </g>
+    <circle cx="30" cy="30" r="6" fill="none" stroke="currentColor" stroke-width="1.4"/>
+    <circle cx="30" cy="30" r="2.5" fill="currentColor"/>
+  </svg>`,
+  body: `<svg viewBox="0 0 60 60" class="step-svg" aria-hidden="true">
+    <g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="30" cy="14" r="6"/>
+      <path d="M30 20 L30 24 M22 26 Q30 22 38 26 L36 42 L24 42 Z"/>
+      <path d="M22 26 L18 40 M38 26 L42 40"/>
+      <path d="M26 42 L24 56 M34 42 L36 56"/>
+    </g>
+  </svg>`,
+  infinity: `<svg viewBox="0 0 60 60" class="step-svg" aria-hidden="true">
+    <path d="M18 30 C 18 22, 26 22, 30 30 C 34 38, 42 38, 42 30 C 42 22, 34 22, 30 30 C 26 38, 18 38, 18 30 Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+  </svg>`,
+  arrow: `<svg viewBox="0 0 60 60" class="step-svg" aria-hidden="true">
+    <g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 46 L46 14"/>
+      <path d="M34 14 L46 14 L46 26"/>
+      <path d="M14 46 L18 50 M14 46 L10 50 M14 46 L14 52"/>
+    </g>
+    <path d="M8 10 l1.5 3 l3 .4 l-2.2 2 l.5 3 l-2.8 -1.5 l-2.8 1.5 l.5 -3 l-2.2 -2 l3 -.4 z" fill="currentColor" stroke="none"/>
+  </svg>`
+};
 
 const BODY_ZONES = ["Cabeça","Garganta","Peito","Coração","Estômago","Ombros","Costas","Ventre","Mãos","Pernas"];
 
@@ -105,8 +170,16 @@ function startSteps(){ stepIdx=0; renderStep(); go("step"); }
 function renderStep(){
   const s=STEPS[stepIdx];
   const host=document.querySelector('.screen[data-screen="step"]');
-  let html=`<div class="stagger"><div class="q-num">0${s.n}</div>
-    <div class="q-title">${s.title}</div>
+  const iconSvg = STEP_ICONS[s.icon] || "";
+  const stepLabel = STEP_LABELS[stepIdx] || "";
+  let html=`<div class="stagger">
+    <div class="q-header">
+      <div class="q-icon">${iconSvg}</div>
+      <div class="q-meta">
+        <span class="q-tag">Passo 0${s.n} · ${stepLabel}</span>
+        <h2 class="q-title">${s.title}</h2>
+      </div>
+    </div>
     <p class="q-hint">${s.hint}</p>`;
 
   if(s.fields.some(f=>["textarea","text"].includes(f.t))){
@@ -174,45 +247,70 @@ function bodyMarkup(){
   return `
   <div class="bodymap">
     <div class="body-figure">
-      <svg viewBox="0 0 200 400" xmlns="http://www.w3.org/2000/svg" class="body-svg" aria-label="Mapa do corpo - toque para selecionar uma região">
-        <!-- silhueta decorativa -->
+      <svg viewBox="0 0 200 440" xmlns="http://www.w3.org/2000/svg" class="body-svg" aria-label="Mapa do corpo - toque para selecionar uma região">
+        <!-- aura/halo de fundo -->
+        <defs>
+          <radialGradient id="bodyAura" cx="50%" cy="35%" r="55%">
+            <stop offset="0%" stop-color="#C9A862" stop-opacity=".10"/>
+            <stop offset="60%" stop-color="#C9A862" stop-opacity=".03"/>
+            <stop offset="100%" stop-color="#C9A862" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <rect x="0" y="0" width="200" height="440" fill="url(#bodyAura)"/>
+        <!-- silhueta anatômica refinada -->
         <g class="silhouette" fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <!-- cabeça -->
-          <ellipse cx="100" cy="36" rx="24" ry="28"/>
+          <!-- cabeça (ovalada, mais natural) -->
+          <ellipse cx="100" cy="40" rx="22" ry="26"/>
           <!-- pescoço -->
-          <path d="M88,62 L88,78 Q100,82 112,78 L112,62"/>
-          <!-- torso/ombros -->
-          <path d="M52,92 Q68,82 88,78 Q100,76 112,78 Q132,82 148,92 Q156,98 154,124 Q150,170 144,232 L56,232 Q50,170 46,124 Q44,98 52,92 Z"/>
-          <!-- braços (linha simples) -->
-          <path d="M52,92 Q44,150 40,210 Q38,232 40,248"/>
-          <path d="M148,92 Q156,150 160,210 Q162,232 160,248"/>
-          <!-- linha central pernas -->
-          <path d="M100,232 L100,300"/>
-          <!-- pernas -->
-          <path d="M56,232 Q60,310 64,392"/>
-          <path d="M76,232 Q78,310 82,392"/>
-          <path d="M144,232 Q140,310 136,392"/>
-          <path d="M124,232 Q122,310 118,392"/>
+          <path d="M90 64 Q90 74 86 80 M110 64 Q110 74 114 80"/>
+          <!-- torso outline (ombros largos -> cintura -> quadril) -->
+          <path d="M86 80 Q62 84 50 100 Q42 116 48 138 Q54 168 56 198 Q56 218 58 232 L142 232 Q144 218 144 198 Q146 168 152 138 Q158 116 150 100 Q138 84 114 80"/>
+          <!-- linha do peito sutil -->
+          <path d="M76 116 Q100 124 124 116" opacity=".5"/>
+          <!-- cintura -->
+          <path d="M62 178 L138 178" opacity=".3"/>
+          <!-- braço esquerdo -->
+          <path d="M50 100 Q40 130 36 162 Q34 196 38 224 Q40 244 36 256"/>
+          <path d="M62 104 Q56 130 54 162 Q52 196 56 224"/>
+          <!-- braço direito -->
+          <path d="M150 100 Q160 130 164 162 Q166 196 162 224 Q160 244 164 256"/>
+          <path d="M138 104 Q144 130 146 162 Q148 196 144 224"/>
+          <!-- mão esq/dir -->
+          <ellipse cx="36" cy="266" rx="8" ry="11"/>
+          <ellipse cx="164" cy="266" rx="8" ry="11"/>
+          <!-- divisor pélvis -->
+          <path d="M100 232 L100 250"/>
+          <!-- perna esquerda -->
+          <path d="M58 232 Q60 290 62 350 Q64 400 70 420"/>
+          <path d="M96 250 Q94 300 90 350 Q86 400 84 420"/>
+          <!-- perna direita -->
+          <path d="M142 232 Q140 290 138 350 Q136 400 130 420"/>
+          <path d="M104 250 Q106 300 110 350 Q114 400 116 420"/>
+          <!-- pés -->
+          <path d="M70 420 L86 422 L84 428 L68 426 Z"/>
+          <path d="M130 420 L114 422 L116 428 L132 426 Z"/>
         </g>
-        <!-- zonas clicáveis (ordem importa: maiores primeiro) -->
+        <!-- zonas clicáveis (ordem importa: maiores primeiro p/ Z-stacking correto) -->
         <g class="zones-svg">
-          <rect   class="zsvg" data-z="Pernas"   x="50" y="236" width="100" height="160" rx="40"/>
-          <rect   class="zsvg" data-z="Peito"    x="60" y="82"  width="80"  height="40"  rx="14"/>
-          <rect   class="zsvg" data-z="Estômago" x="68" y="128" width="64"  height="28"  rx="12"/>
-          <rect   class="zsvg" data-z="Ventre"   x="70" y="160" width="60"  height="40"  rx="14"/>
-          <circle class="zsvg" data-z="Ombros"   cx="58"  cy="92"  r="16"/>
-          <circle class="zsvg" data-z="Ombros"   cx="142" cy="92"  r="16"/>
-          <circle class="zsvg" data-z="Coração"  cx="84"  cy="106" r="14"/>
-          <ellipse class="zsvg" data-z="Cabeça"  cx="100" cy="36"  rx="26" ry="30"/>
-          <rect   class="zsvg" data-z="Garganta" x="84" y="60" width="32" height="22" rx="8"/>
-          <circle class="zsvg" data-z="Mãos"     cx="38"  cy="252" r="16"/>
-          <circle class="zsvg" data-z="Mãos"     cx="162" cy="252" r="16"/>
+          <rect   class="zsvg" data-z="Pernas"   x="48" y="240" width="104" height="180" rx="50"/>
+          <rect   class="zsvg" data-z="Peito"    x="58" y="86"  width="84"  height="38"  rx="16"/>
+          <rect   class="zsvg" data-z="Estômago" x="64" y="128" width="72"  height="28"  rx="14"/>
+          <rect   class="zsvg" data-z="Ventre"   x="66" y="160" width="68"  height="44"  rx="16"/>
+          <circle class="zsvg" data-z="Ombros"   cx="54"  cy="96"  r="16"/>
+          <circle class="zsvg" data-z="Ombros"   cx="146" cy="96"  r="16"/>
+          <circle class="zsvg" data-z="Coração"  cx="84"  cy="110" r="14"/>
+          <ellipse class="zsvg" data-z="Cabeça"  cx="100" cy="40"  rx="24" ry="28"/>
+          <rect   class="zsvg" data-z="Garganta" x="84" y="64" width="32" height="22" rx="9"/>
+          <ellipse class="zsvg" data-z="Mãos"    cx="36"  cy="266" rx="11" ry="14"/>
+          <ellipse class="zsvg" data-z="Mãos"    cx="164" cy="266" rx="11" ry="14"/>
         </g>
+        <!-- pulsador para a região selecionada -->
+        <g class="zone-pulse" id="zonePulse" style="opacity:0;pointer-events:none"></g>
       </svg>
-      <div class="body-label" id="bodyLabel">${data.corpo||"Toque uma região"}</div>
+      <div class="body-label" id="bodyLabel">${data.corpo||"Toque uma região do corpo"}</div>
     </div>
     <div class="zones-fallback">
-      <button class="zone" data-z="Costas" type="button">↻ Costas</button>
+      <button class="zone" data-z="Costas" type="button">⤺ Costas</button>
     </div>
   </div>`;
 }
@@ -238,7 +336,8 @@ function prevStep(){
 function updateProgress(){
   const pct=((stepIdx+1)/STEPS.length)*100;
   document.getElementById("bar").style.width=pct+"%";
-  document.getElementById("count").textContent=`0${stepIdx+1} / 0${STEPS.length}`;
+  const label = STEP_LABELS[stepIdx]||"";
+  document.getElementById("count").textContent=`${label} · 0${stepIdx+1}/0${STEPS.length}`;
 }
 
 /* ---------- Voz (Web Speech API) ---------- */
