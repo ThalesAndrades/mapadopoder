@@ -7,6 +7,7 @@ Estrutura do repositório
 ├── mapa-do-poder/        <- conteúdo que aparece em /mapa-do-poder
 │   ├── index.html
 │   ├── app.js
+│   ├── manifest.webmanifest   <- PWA (instalável como app no celular)
 │   └── .htaccess
 ├── deploy/
 │   └── mapa-do-poder.zip <- pacote para upload manual (cPanel/FTP)
@@ -113,6 +114,44 @@ Links para @despertarespiral e @drasunyannunes aparecem em:
 
 
 ===================
+Experiência imersiva
+===================
+- Respiração de centramento (2 ciclos de 8s) antes do primeiro passo,
+  com botão "Pular respiração".
+- Transições direcionais entre passos (avançar desliza, voltar desliza
+  no sentido oposto).
+- Feedback tátil (vibração curta) em avançar/voltar, seleção de região
+  do corpo e transformação da estrela em flecha.
+- Retomada de progresso: o hero mostra "Continuar de onde parei" se já
+  houver respostas salvas, levando direto ao último passo.
+- Mudança ambiental sutil de tom dourado em cada um dos 8 passos.
+
+===================
+Pôster constelação (peça final)
+===================
+Ao final do mapa, é gerado um pôster vertical único (1080×1920)
+constelação determinística a partir das respostas. Mesmas respostas
+geram o mesmo desenho — pessoal, repetível, compartilhável.
+
+Inclui: nome (se informado), região do corpo, frase de pertencimento,
+assinatura @despertarespiral · @drasunyannunes e o link da ferramenta.
+
+Botões na tela de resultado:
+- "Baixar pôster (PNG)" → salva no dispositivo
+- "Compartilhar imagem" → usa Web Share API com arquivo quando
+  disponível (mobile moderno); senão, copia o link.
+
+===================
+PWA · Instalável
+===================
+Com o manifest.webmanifest, o Mapa do Poder pode ser adicionado à
+tela inicial do celular (iOS: Compartilhar → Adicionar à Tela de
+Início; Android: menu → Instalar app). Abre em tela cheia, sem
+barra do navegador, com ícone próprio. Continua 100% estático,
+sem service worker.
+
+===================
 Manutenção
 ===================
-Mantenha sempre index.html e app.js juntos na pasta mapa-do-poder/.
+Mantenha sempre index.html, app.js e manifest.webmanifest juntos
+na pasta mapa-do-poder/.

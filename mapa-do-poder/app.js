@@ -139,22 +139,39 @@ function flagSaved(){
   flagT=setTimeout(()=>f.classList.remove("show"),1400);
 }
 
+/* ---------- Haptic feedback ---------- */
+const REDUCED_MOTION = matchMedia("(prefers-reduced-motion:reduce)").matches;
+function haptic(pattern){
+  if(REDUCED_MOTION) return;
+  try{ if(navigator.vibrate) navigator.vibrate(pattern||10); }catch(e){}
+}
+
 /* ---------- Navegação entre telas ---------- */
 function screens(){ return document.querySelectorAll(".screen") }
-function show(el){
-  screens().forEach(s=>s.classList.remove("active"));
+function show(el, dir){
+  screens().forEach(s=>s.classList.remove("active","enter-forward","enter-back"));
   el.classList.add("active");
+  if(dir==="forward") el.classList.add("enter-forward");
+  else if(dir==="back") el.classList.add("enter-back");
   // re-trigger stagger
   const st=el.querySelector(".stagger");
   if(st){ st.style.animation="none"; void st.offsetWidth; st.style.animation=""; }
   window.scrollTo(0,0);
 }
-function go(name){
+const SCREEN_ORDER = ["hero","intro","breathe","step","result","capture","done"];
+function go(name, dir){
   const el=document.querySelector(`.screen[data-screen="${name}"]`);
   const showBar = (name==="step");
   document.getElementById("topbar").classList.toggle("hidden", !showBar);
-  show(el);
+  if(!dir){
+    const cur = document.querySelector(".screen.active");
+    const curName = cur ? cur.dataset.screen : null;
+    const a = SCREEN_ORDER.indexOf(curName), b = SCREEN_ORDER.indexOf(name);
+    dir = (a>=0 && b>=0 && b<a) ? "back" : "forward";
+  }
+  show(el, dir);
   if(name==="capture") prefillCapture();
+  document.body.dataset.stage = name;
 }
 function prefillCapture(){
   const n=document.getElementById("cap-nome");
@@ -164,12 +181,79 @@ function prefillCapture(){
   if(e) e.value=data.email||"";
   if(p) p.value=data.phone||"";
 }
-function startSteps(){ stepIdx=0; renderStep(); go("step"); }
+function startSteps(){ stepIdx=0; renderStep(); go("step","forward"); }
+
+/* ---------- Respiração (3 ciclos) ---------- */
+let breatheT;
+function startBreathing(){
+  go("breathe","forward");
+  const lbl=document.getElementById("breatheLabel");
+  if(!lbl) { startSteps(); return; }
+  if(REDUCED_MOTION){ lbl.textContent="Respire"; clearTimeout(breatheT); breatheT=setTimeout(()=>startSteps(),1800); return; }
+  const cycle = 8000; // sync com .breathe-orb animation
+  const phases = [
+    [0,    "Inspire"],
+    [3000, "Sustente"],
+    [5000, "Solte"]
+  ];
+  let cycleN = 0;
+  const totalCycles = 2;
+  function run(){
+    phases.forEach(([t,text],i)=>{
+      setTimeout(()=>{
+        const l=document.getElementById("breatheLabel");
+        if(!l || document.body.dataset.stage!=="breathe") return;
+        if(i===0 && cycleN===1){ l.textContent=text; }
+        else { l.style.opacity=0; setTimeout(()=>{ l.textContent=text; l.style.opacity=1; },180); }
+        haptic(8);
+      }, t);
+    });
+    cycleN++;
+    if(cycleN<totalCycles){
+      breatheT = setTimeout(run, cycle);
+    } else {
+      breatheT = setTimeout(()=>{
+        if(document.body.dataset.stage==="breathe") startSteps();
+      }, cycle);
+    }
+  }
+  run();
+}
+function skipBreathing(){ clearTimeout(breatheT); startSteps(); }
+
+/* ---------- Retomada ---------- */
+function hasProgress(){
+  const keys = Object.keys(data).filter(k=>!k.startsWith("__"));
+  return keys.length>0;
+}
+function setupResume(){
+  const card = document.getElementById("resumeCard");
+  if(!card) return;
+  if(!hasProgress()){ card.style.display="none"; return; }
+  const savedIdx = Math.min(Math.max(parseInt(data.__stepIdx||0,10)||0,0), STEPS.length-1);
+  const labelEl = document.getElementById("resumeLabel");
+  const stepEl = document.getElementById("resumeStep");
+  if(labelEl) labelEl.textContent = STEP_LABELS[savedIdx] || "";
+  if(stepEl) stepEl.textContent = String(savedIdx+1).padStart(2,"0");
+  card.style.display="flex";
+}
+function resumeJourney(){
+  haptic(10);
+  const savedIdx = Math.min(Math.max(parseInt(data.__stepIdx||0,10)||0,0), STEPS.length-1);
+  stepIdx = savedIdx;
+  renderStep();
+  go("step","forward");
+}
 
 /* ---------- Render de um passo ---------- */
-function renderStep(){
+function renderStep(dir){
   const s=STEPS[stepIdx];
   const host=document.querySelector('.screen[data-screen="step"]');
+  if(dir){
+    host.classList.remove("enter-forward","enter-back");
+    void host.offsetWidth;
+    host.classList.add(dir==="back"?"enter-back":"enter-forward");
+  }
   const iconSvg = STEP_ICONS[s.icon] || "";
   const stepLabel = STEP_LABELS[stepIdx] || "";
   let html=`<div class="stagger">
@@ -216,6 +300,7 @@ function renderStep(){
   });
   // body zones (SVG + fallback chips)
   const selectBodyZone = (zoneName)=>{
+    haptic(12);
     host.querySelectorAll(".zsvg,.zone").forEach(x=>x.classList.remove("sel"));
     host.querySelectorAll(`[data-z="${zoneName}"]`).forEach(x=>x.classList.add("sel"));
     data.corpo=zoneName; save();
@@ -326,18 +411,21 @@ function vizMarkup(){
 function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
 function nextStep(){
-  if(stepIdx<STEPS.length-1){ stepIdx++; renderStep(); }
-  else { renderResult(); go("result"); }
+  haptic(10);
+  if(stepIdx<STEPS.length-1){ stepIdx++; data.__stepIdx=stepIdx; save(); renderStep("forward"); }
+  else { data.__stepIdx=stepIdx; save(); renderResult(); go("result","forward"); }
 }
 function prevStep(){
-  if(stepIdx>0){ stepIdx--; renderStep(); }
-  else { go("intro"); }
+  haptic(8);
+  if(stepIdx>0){ stepIdx--; data.__stepIdx=stepIdx; save(); renderStep("back"); }
+  else { go("intro","back"); }
 }
 function updateProgress(){
   const pct=((stepIdx+1)/STEPS.length)*100;
   document.getElementById("bar").style.width=pct+"%";
   const label = STEP_LABELS[stepIdx]||"";
   document.getElementById("count").textContent=`${label} · 0${stepIdx+1}/0${STEPS.length}`;
+  document.body.dataset.stage = "step-"+stepIdx;
 }
 
 /* ---------- Voz (Web Speech API) ---------- */
@@ -394,6 +482,7 @@ function initViz(){
     if(charging && vizState.glow<1) vizState.glow=Math.min(1,vizState.glow+0.012);
     if(!charging && !transformed && vizState.glow>0) vizState.glow=Math.max(0,vizState.glow-0.006);
     if(vizState.glow>=1 && !transformed){ transformed=true; data.viz="flecha"; save();
+      haptic([12,60,12]);
       if(hint) hint.textContent="a trava virou flecha — direcione-a ao seu objetivo"; }
     if(transformed && vizState.arrowT<1) vizState.arrowT=Math.min(1,vizState.arrowT+0.02);
 
@@ -468,6 +557,352 @@ const BODY_READINGS = {
   "Pernas": "na direção — no avançar que ainda não autorizou"
 };
 
+/* ============================================================
+   CONSTELAÇÃO: pôster generativo determinístico das respostas
+   ============================================================ */
+function fnv1a(str){
+  let h = 2166136261 >>> 0;
+  for(let i=0;i<str.length;i++){
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return h >>> 0;
+}
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t>>>15), t | 1);
+    t ^= t + Math.imul(t ^ (t>>>7), t | 61);
+    return ((t ^ (t>>>14)) >>> 0) / 4294967296;
+  };
+}
+const ZONE_TOPO = {
+  "Cabeça":   { kind:"crown",   anchor:0.30 },
+  "Garganta": { kind:"column",  anchor:0.36 },
+  "Peito":    { kind:"radiant", anchor:0.46 },
+  "Coração":  { kind:"ring",    anchor:0.50 },
+  "Estômago": { kind:"spiral",  anchor:0.54 },
+  "Ombros":   { kind:"arc",     anchor:0.40 },
+  "Costas":   { kind:"column",  anchor:0.48 },
+  "Ventre":   { kind:"spiral",  anchor:0.58 },
+  "Mãos":     { kind:"radiant", anchor:0.50 },
+  "Pernas":   { kind:"column",  anchor:0.66 }
+};
+
+function drawConstellation(cv, opts){
+  const ctx = cv.getContext("2d");
+  const W = cv.width, H = cv.height;
+  const cssW = parseFloat(cv.dataset.cssW||W), cssH = parseFloat(cv.dataset.cssH||H);
+  const scale = W / cssW;
+  ctx.setTransform(scale,0,0,scale,0,0);
+  const w = cssW, h = cssH;
+
+  const nome = (opts.nome||"").trim();
+  const trava = (opts.trava||"").trim();
+  const corpo = (opts.corpo||"").trim();
+  const desejo = (opts.desejo||"").trim();
+  const frase = (opts.frase||"").trim();
+  const seedStr = [trava,corpo,desejo,frase,opts.primeira||"",opts.pessoa||""].join("|") || "vazio";
+  const seed = fnv1a(seedStr);
+  const rnd = mulberry32(seed);
+
+  // fundo
+  const bg = ctx.createLinearGradient(0,0,0,h);
+  bg.addColorStop(0,"#1a130a");
+  bg.addColorStop(0.55,"#0e0a05");
+  bg.addColorStop(1,"#080503");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0,0,w,h);
+
+  // aurora sutil
+  const aur = ctx.createRadialGradient(w*0.5, h*0.18, 10, w*0.5, h*0.18, h*0.5);
+  aur.addColorStop(0,"rgba(228,206,156,0.18)");
+  aur.addColorStop(1,"rgba(228,206,156,0)");
+  ctx.fillStyle = aur;
+  ctx.fillRect(0,0,w,h);
+
+  // estrelas de fundo
+  ctx.save();
+  for(let i=0;i<180;i++){
+    const x = rnd()*w, y = rnd()*h;
+    const r = rnd()*1.6 + 0.3;
+    const a = 0.25 + rnd()*0.55;
+    ctx.globalAlpha = a;
+    ctx.fillStyle = rnd()>0.85 ? "#F4ECDC" : "#C9A862";
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+
+  // grão
+  ctx.save();
+  ctx.globalAlpha = 0.04;
+  for(let i=0;i<1400;i++){
+    ctx.fillStyle = rnd()>0.5 ? "#fff" : "#000";
+    ctx.fillRect(rnd()*w, rnd()*h, 1, 1);
+  }
+  ctx.restore();
+
+  // moldura
+  ctx.save();
+  ctx.strokeStyle = "rgba(201,168,98,0.45)";
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(w*0.04, h*0.04, w*0.92, h*0.92);
+  ctx.strokeStyle = "rgba(201,168,98,0.18)";
+  ctx.strokeRect(w*0.055, h*0.055, w*0.89, h*0.89);
+  ctx.restore();
+
+  // header
+  ctx.save();
+  ctx.fillStyle = "#C9A862";
+  ctx.textAlign = "center";
+  ctx.font = '500 ' + Math.round(w*0.022) + 'px "Jost", sans-serif';
+  const headerY = h*0.085;
+  ctx.fillText("MÉTODO  DESPERTAR  ESPIRAL", w/2, headerY);
+  ctx.font = 'italic 500 ' + Math.round(w*0.078) + 'px "Cormorant Garamond", Georgia, serif';
+  ctx.fillStyle = "#F4ECDC";
+  ctx.fillText("Mapa do Poder", w/2, headerY + w*0.085);
+  // ornamento
+  ctx.strokeStyle = "rgba(201,168,98,0.5)";
+  ctx.lineWidth = 1;
+  const ornY = headerY + w*0.105;
+  ctx.beginPath(); ctx.moveTo(w*0.32, ornY); ctx.lineTo(w*0.45, ornY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(w*0.55, ornY); ctx.lineTo(w*0.68, ornY); ctx.stroke();
+  ctx.fillStyle = "#C9A862";
+  ctx.beginPath(); ctx.arc(w*0.5, ornY, w*0.008, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+
+  // CONSTELAÇÃO
+  const topo = ZONE_TOPO[corpo] || { kind:"radiant", anchor:0.5 };
+  const cx = w*0.5, cy = h*topo.anchor;
+  const baseR = w*0.28;
+  const spikes = 5 + (fnv1a(trava||"x") % 4); // 5..8
+  const desejoSeed = fnv1a(desejo||"d");
+  const desejoLen = (desejo||"").length;
+  const rays = 6 + (desejoLen % 7); // 6..12
+  const fraseSeed = fnv1a(frase||"f");
+
+  ctx.save();
+  // halo grande
+  const halo = ctx.createRadialGradient(cx,cy,2, cx,cy,baseR*1.8);
+  halo.addColorStop(0,"rgba(244,236,220,0.22)");
+  halo.addColorStop(0.5,"rgba(201,168,98,0.10)");
+  halo.addColorStop(1,"rgba(201,168,98,0)");
+  ctx.fillStyle = halo;
+  ctx.beginPath(); ctx.arc(cx,cy,baseR*1.8,0,Math.PI*2); ctx.fill();
+
+  // raios do desejo
+  ctx.strokeStyle = "rgba(228,206,156,0.42)";
+  ctx.lineWidth = 0.9;
+  for(let i=0;i<rays;i++){
+    const a = (i/rays)*Math.PI*2 + (desejoSeed % 360)*Math.PI/180;
+    const r1 = baseR*0.55, r2 = baseR*(1.05 + rnd()*0.35);
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(a)*r1, cy + Math.sin(a)*r1);
+    ctx.lineTo(cx + Math.cos(a)*r2, cy + Math.sin(a)*r2);
+    ctx.stroke();
+  }
+
+  // topologia da constelação por região
+  const anchors = [];
+  if(topo.kind==="ring"){
+    for(let i=0;i<spikes;i++){
+      const a = (i/spikes)*Math.PI*2 - Math.PI/2;
+      anchors.push({x: cx+Math.cos(a)*baseR*0.78, y: cy+Math.sin(a)*baseR*0.78, r: 4 + (i===0?2:0)});
+    }
+  } else if(topo.kind==="spiral"){
+    for(let i=0;i<spikes+2;i++){
+      const t = i/(spikes+2);
+      const a = t*Math.PI*3 + (fraseSeed%180)*Math.PI/180;
+      const r = baseR*(0.25 + t*0.7);
+      anchors.push({x: cx+Math.cos(a)*r, y: cy+Math.sin(a)*r, r: 3 + t*3});
+    }
+  } else if(topo.kind==="column"){
+    for(let i=0;i<spikes;i++){
+      const t = i/(spikes-1||1);
+      const off = (rnd()-0.5)*baseR*0.35;
+      anchors.push({x: cx + off, y: cy - baseR*0.7 + t*baseR*1.4, r: 3 + (i===Math.floor(spikes/2)?3:0)});
+    }
+  } else if(topo.kind==="crown"){
+    for(let i=0;i<spikes;i++){
+      const a = -Math.PI*0.85 + (i/(spikes-1||1))*Math.PI*0.7;
+      const r = baseR*(0.7 + (i%2?0.18:0));
+      anchors.push({x: cx+Math.cos(a)*r, y: cy+Math.sin(a)*r, r: 3.5});
+    }
+    anchors.push({x: cx, y: cy + baseR*0.25, r: 5});
+  } else if(topo.kind==="arc"){
+    for(let i=0;i<spikes;i++){
+      const a = Math.PI*0.15 + (i/(spikes-1||1))*Math.PI*0.7;
+      anchors.push({x: cx+Math.cos(a)*baseR*0.85, y: cy+Math.sin(a)*baseR*0.85 - baseR*0.2, r: 3.5});
+    }
+  } else { // radiant
+    for(let i=0;i<spikes;i++){
+      const a = (i/spikes)*Math.PI*2 + (fraseSeed%90)*Math.PI/180;
+      const r = baseR*(0.55 + rnd()*0.5);
+      anchors.push({x: cx+Math.cos(a)*r, y: cy+Math.sin(a)*r, r: 3 + rnd()*2.5});
+    }
+  }
+  anchors.push({x:cx, y:cy, r:7, core:true});
+
+  // linhas conectando
+  ctx.strokeStyle = "rgba(201,168,98,0.55)";
+  ctx.lineWidth = 1.1;
+  for(let i=0;i<anchors.length-1;i++){
+    const a = anchors[i], b = anchors[(i+1)%(anchors.length-1)];
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+  }
+  // raios do núcleo até alguns nós
+  for(let i=0;i<anchors.length-1;i+=2){
+    const a = anchors[i];
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.lineTo(a.x,a.y);
+    ctx.strokeStyle = "rgba(228,206,156,0.35)";
+    ctx.stroke();
+  }
+
+  // estrelas (anchors)
+  anchors.forEach(a=>{
+    const r = a.r * (a.core?1.6:1);
+    const g = ctx.createRadialGradient(a.x,a.y,0,a.x,a.y,r*4);
+    g.addColorStop(0, a.core?"rgba(255,250,235,1)":"rgba(244,236,220,0.95)");
+    g.addColorStop(0.3,"rgba(228,206,156,0.6)");
+    g.addColorStop(1,"rgba(201,168,98,0)");
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(a.x,a.y,r*4,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = a.core?"#FFF7E2":"#F4ECDC";
+    ctx.beginPath(); ctx.arc(a.x,a.y,r,0,Math.PI*2); ctx.fill();
+  });
+
+  // estrela-flecha (mira) — apontando para nordeste se transformada
+  if(opts.transformed){
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(-Math.PI/4);
+    const len = baseR*1.05;
+    ctx.strokeStyle = "rgba(255,247,226,0.95)";
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.shadowColor = "#E4CE9C";
+    ctx.shadowBlur = 16;
+    ctx.beginPath(); ctx.moveTo(-len/2,0); ctx.lineTo(len/2,0); ctx.stroke();
+    ctx.fillStyle = "#FFF7E2";
+    ctx.beginPath();
+    ctx.moveTo(len/2+10,0); ctx.lineTo(len/2-7,-8); ctx.lineTo(len/2-7,8); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-len/2,0); ctx.lineTo(-len/2-10,-7);
+    ctx.moveTo(-len/2,0); ctx.lineTo(-len/2-10,7);
+    ctx.stroke();
+    ctx.restore();
+  }
+  ctx.restore();
+
+  // labels — abaixo da constelação
+  ctx.save();
+  ctx.textAlign = "center";
+  let ty = cy + baseR*1.6;
+
+  if(nome){
+    ctx.fillStyle = "#E4CE9C";
+    ctx.font = 'italic 500 ' + Math.round(w*0.052) + 'px "Cormorant Garamond", serif';
+    ctx.fillText(nome, w/2, ty);
+    ty += w*0.062;
+  }
+
+  if(corpo){
+    ctx.fillStyle = "#C9A862";
+    ctx.font = '500 ' + Math.round(w*0.018) + 'px "Jost", sans-serif';
+    ctx.fillText(("Trava ancora em · " + corpo).toUpperCase(), w/2, ty);
+    ty += w*0.04;
+  }
+
+  // frase de pertencimento — multi-linha
+  if(frase){
+    ctx.fillStyle = "#F4ECDC";
+    ctx.font = 'italic 400 ' + Math.round(w*0.036) + 'px "Cormorant Garamond", serif';
+    const lines = wrapText(ctx, '"' + frase + '"', w*0.78);
+    lines.slice(0,4).forEach(line=>{
+      ctx.fillText(line, w/2, ty);
+      ty += w*0.046;
+    });
+  } else if(desejo){
+    ctx.fillStyle = "#F4ECDC";
+    ctx.font = 'italic 400 ' + Math.round(w*0.034) + 'px "Cormorant Garamond", serif';
+    const lines = wrapText(ctx, desejo, w*0.78);
+    lines.slice(0,3).forEach(line=>{ ctx.fillText(line, w/2, ty); ty += w*0.044; });
+  }
+  ctx.restore();
+
+  // footer
+  ctx.save();
+  ctx.textAlign = "center";
+  const footY = h*0.93;
+  ctx.strokeStyle = "rgba(201,168,98,0.4)";
+  ctx.beginPath(); ctx.moveTo(w*0.3, footY - w*0.04); ctx.lineTo(w*0.7, footY - w*0.04); ctx.stroke();
+  ctx.fillStyle = "#C9A862";
+  ctx.font = '500 ' + Math.round(w*0.018) + 'px "Jost", sans-serif';
+  ctx.fillText("@DESPERTARESPIRAL  ·  @DRASUNYANNUNES", w/2, footY);
+  ctx.fillStyle = "#8A7B63";
+  ctx.font = '400 ' + Math.round(w*0.016) + 'px "Jost", sans-serif';
+  ctx.fillText("despertarespiral.com.br/mapa-do-poder", w/2, footY + w*0.028);
+  ctx.restore();
+}
+
+function wrapText(ctx, text, maxW){
+  const words = String(text).split(/\s+/);
+  const lines = [];
+  let cur = "";
+  words.forEach(w=>{
+    const test = cur ? cur+" "+w : w;
+    if(ctx.measureText(test).width > maxW && cur){
+      lines.push(cur); cur = w;
+    } else cur = test;
+  });
+  if(cur) lines.push(cur);
+  return lines;
+}
+
+function renderPoster(){
+  const cv = document.getElementById("poster");
+  if(!cv) return;
+  const TARGET_W = 1080, TARGET_H = 1920;
+  const dpr = Math.min(devicePixelRatio||1, 2);
+  cv.width = TARGET_W; cv.height = TARGET_H;
+  cv.dataset.cssW = TARGET_W; cv.dataset.cssH = TARGET_H;
+  drawConstellation(cv, {
+    nome: data.nome,
+    trava: data.trava,
+    corpo: data.corpo,
+    desejo: data.desejo,
+    frase: data.frase_vinculo,
+    primeira: data.primeira_vez,
+    pessoa: data.pessoa,
+    transformed: data.viz==="flecha"
+  });
+}
+
+function downloadPoster(){
+  haptic(15);
+  const cv = document.getElementById("poster");
+  if(!cv) return;
+  const nameSafe = (data.nome||"meu-mapa").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") || "meu-mapa";
+  if(cv.toBlob){
+    cv.toBlob(blob=>{
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `mapa-do-poder-${nameSafe}.png`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    }, "image/png");
+  } else {
+    const url = cv.toDataURL("image/png");
+    const a = document.createElement("a");
+    a.href = url; a.download = `mapa-do-poder-${nameSafe}.png`;
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+}
+
 function renderResult(){
   const host=document.querySelector('.screen[data-screen="result"]');
   const nome = (data.nome||"").trim();
@@ -493,7 +928,16 @@ function renderResult(){
   let html = `<div class="stagger">
     <p class="eyebrow">Seu Mapa</p>
     <h2 style="margin-top:16px">${saudacao}<br><em>aqui está sua leitura</em></h2>
-    <p class="body" style="margin-top:20px">Este é o seu mapa, costurado a partir das suas próprias respostas. Releia com calma — ele não foi escrito por mim, foi escrito por você.</p>`;
+    <p class="body" style="margin-top:20px">Este é o seu mapa, costurado a partir das suas próprias respostas. Releia com calma — ele não foi escrito por mim, foi escrito por você.</p>
+
+    <div class="poster-wrap" style="margin-top:24px">
+      <canvas id="poster" aria-label="Pôster constelação do seu Mapa do Poder"></canvas>
+    </div>
+    <div class="poster-actions">
+      <button class="btn" onclick="downloadPoster()">Baixar pôster (PNG) <span class="arr">↓</span></button>
+      <button class="btn-ghost" onclick="sharePoster()" type="button">Compartilhar imagem</button>
+    </div>
+    <p class="poster-caption">Sua constelação · gerada a partir das suas respostas</p>`;
 
   if(insights.length){
     html += `<div class="insights">`+
@@ -581,6 +1025,29 @@ function renderResult(){
   </div>`;
 
   host.innerHTML = html;
+  requestAnimationFrame(()=>renderPoster());
+}
+
+/* ---------- Compartilhar pôster (Web Share API com arquivo, fallback link) ---------- */
+async function sharePoster(){
+  haptic(10);
+  const cv = document.getElementById("poster");
+  if(!cv){ shareIt(); return; }
+  const url = "https://despertarespiral.com.br/mapa-do-poder";
+  const text = "Meu Mapa do Poder — Método Despertar Espiral.";
+  try{
+    if(cv.toBlob && navigator.canShare){
+      const blob = await new Promise(res=>cv.toBlob(res, "image/png"));
+      if(blob){
+        const file = new File([blob], "mapa-do-poder.png", { type:"image/png" });
+        if(navigator.canShare({ files:[file] })){
+          await navigator.share({ files:[file], title:"Mapa do Poder", text, url });
+          return;
+        }
+      }
+    }
+  }catch(e){}
+  shareIt();
 }
 
 /* ---------- Captura de contato (último: nome, email, telefone) ---------- */
@@ -604,7 +1071,9 @@ async function submitCapture(){
 /* ---------- Concluir / reiniciar / compartilhar ---------- */
 function restart(){
   if(confirm("Isto vai apagar suas respostas salvas neste dispositivo. Deseja recomeçar?")){
-    data={}; localStorage.removeItem(KEY); stepIdx=0; renderStep(); go("hero");
+    data={}; localStorage.removeItem(KEY); stepIdx=0;
+    const card = document.getElementById("resumeCard"); if(card) card.style.display="none";
+    renderStep(); go("hero","back");
   }
 }
 function shareIt(){
@@ -656,3 +1125,13 @@ window.go=go; window.startSteps=startSteps; window.nextStep=nextStep;
 window.prevStep=prevStep; window.renderResult=renderResult;
 window.submitCapture=submitCapture;
 window.restart=restart; window.shareIt=shareIt;
+window.startBreathing=startBreathing; window.skipBreathing=skipBreathing;
+window.resumeJourney=resumeJourney;
+window.downloadPoster=downloadPoster; window.sharePoster=sharePoster;
+
+/* Inicialização — retomada de progresso no hero */
+if(document.readyState==="loading"){
+  document.addEventListener("DOMContentLoaded", setupResume);
+} else {
+  setupResume();
+}
