@@ -4,6 +4,9 @@
 # UTF-8 default
 AddDefaultCharset UTF-8
 
+# MIME para manifest PWA
+AddType application/manifest+json .webmanifest
+
 # Habilita compressão (se disponível)
 <IfModule mod_deflate.c>
   AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml

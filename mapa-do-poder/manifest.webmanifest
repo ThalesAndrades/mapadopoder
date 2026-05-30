@@ -1,0 +1,21 @@
+{
+  "name": "Mapa do Poder · Despertar Espiral",
+  "short_name": "Mapa do Poder",
+  "description": "Ferramenta guiada do Método Despertar Espiral: mapeie a trava que te paralisa e transforme-a em direção.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#16110B",
+  "theme_color": "#16110B",
+  "lang": "pt-BR",
+  "categories": ["lifestyle", "education", "health"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Crect%20width%3D%22512%22%20height%3D%22512%22%20rx%3D%22108%22%20fill%3D%22%2316110B%22%2F%3E%3Cg%20stroke%3D%22%23C9A862%22%20stroke-width%3D%229%22%20fill%3D%22none%22%3E%3Ccircle%20cx%3D%22256%22%20cy%3D%22256%22%20r%3D%22128%22%2F%3E%3Ccircle%20cx%3D%22256%22%20cy%3D%22256%22%20r%3D%2264%22%2F%3E%3C%2Fg%3E%3Ccircle%20cx%3D%22256%22%20cy%3D%22256%22%20r%3D%2218%22%20fill%3D%22%23E4CE9C%22%2F%3E%3C%2Fsvg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -7,6 +7,11 @@
 <meta name="description" content="Uma ferramenta guiada do Método Despertar Espiral para mapear a trava que te paralisa e transformá-la em direção. 8 passos, 5 minutos, gratuito.">
 <meta name="theme-color" content="#16110B">
 <meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mapa do Poder">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20180%20180%22%3E%3Crect%20width%3D%22180%22%20height%3D%22180%22%20rx%3D%2238%22%20fill%3D%22%2316110B%22%2F%3E%3Cg%20stroke%3D%22%23C9A862%22%20stroke-width%3D%223%22%20fill%3D%22none%22%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2290%22%20r%3D%2244%22%2F%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2290%22%20r%3D%2222%22%2F%3E%3C%2Fg%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2290%22%20r%3D%226%22%20fill%3D%22%23E4CE9C%22%2F%3E%3C%2Fsvg%3E">
 <meta property="og:title" content="Mapa do Poder · Despertar Espiral">
 <meta property="og:description" content="Mapeie a trava que te paralisa e transforme-a em direção. 8 passos guiados.">
 <meta property="og:type" content="website">
@@ -64,7 +69,11 @@ body::before{
 }
 .screen{display:none;width:100%;max-width:680px;margin:0 auto}
 .screen.active{display:block;animation:rise .65s var(--ease) both}
+.screen.active.enter-forward{animation:slide-forward .55s var(--ease) both}
+.screen.active.enter-back{animation:slide-back .55s var(--ease) both}
 @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes slide-forward{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes slide-back{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
 .stagger>*{opacity:0;animation:rise .7s var(--ease) forwards}
 .stagger>*:nth-child(1){animation-delay:.04s}
 .stagger>*:nth-child(2){animation-delay:.14s}
@@ -376,6 +385,95 @@ textarea:focus,input:focus{
   *{animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
 
+/* AMBIENT TINTS por passo (sutil) */
+body[data-stage="step-0"] .aurora{background:radial-gradient(60% 60% at 50% 0%,rgba(168,130,63,.16),transparent 70%)}
+body[data-stage="step-1"] .aurora{background:radial-gradient(60% 60% at 50% 0%,rgba(190,140,80,.14),transparent 70%)}
+body[data-stage="step-2"] .aurora{background:radial-gradient(60% 60% at 50% 0%,rgba(170,120,90,.14),transparent 70%)}
+body[data-stage="step-3"] .aurora{background:radial-gradient(60% 60% at 50% 0%,rgba(180,150,80,.16),transparent 70%)}
+body[data-stage="step-4"] .aurora{background:radial-gradient(60% 60% at 50% 0%,rgba(220,180,100,.18),transparent 70%)}
+body[data-stage="step-5"] .aurora{background:radial-gradient(60% 60% at 50% 0%,rgba(168,130,63,.16),transparent 70%)}
+body[data-stage="step-6"] .aurora{background:radial-gradient(60% 60% at 50% 0%,rgba(228,206,156,.18),transparent 70%)}
+body[data-stage="step-7"] .aurora{background:radial-gradient(60% 60% at 50% 0%,rgba(244,236,220,.20),transparent 70%)}
+
+/* BREATHING screen */
+.breathe-stage{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:60vh;padding:40px 18px;text-align:center;
+}
+.breathe-orb{
+  width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,rgba(244,236,220,.85),rgba(201,168,98,.18) 60%,transparent 75%);
+  box-shadow:0 0 60px rgba(228,206,156,.4),inset 0 0 30px rgba(168,130,63,.3);
+  animation:breathe 8s var(--ease) infinite;
+  margin:14px auto 28px;
+}
+@keyframes breathe{
+  0%   {transform:scale(.55);box-shadow:0 0 30px rgba(228,206,156,.25),inset 0 0 18px rgba(168,130,63,.2)}
+  37%  {transform:scale(1.4);box-shadow:0 0 90px rgba(228,206,156,.55),inset 0 0 36px rgba(168,130,63,.4)}
+  62%  {transform:scale(1.4);box-shadow:0 0 90px rgba(228,206,156,.55),inset 0 0 36px rgba(168,130,63,.4)}
+  100% {transform:scale(.55);box-shadow:0 0 30px rgba(228,206,156,.25),inset 0 0 18px rgba(168,130,63,.2)}
+}
+.breathe-label{
+  font-family:var(--serif);font-style:italic;
+  font-size:clamp(28px,7vw,42px);color:var(--gold-soft);
+  letter-spacing:.02em;line-height:1.1;min-height:1.2em;
+  transition:opacity .6s var(--ease);
+}
+.breathe-sub{
+  font-family:var(--sans);font-size:12px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--muted);font-weight:500;
+  margin-top:18px;
+}
+.breathe-skip{margin-top:36px}
+@media(prefers-reduced-motion:reduce){
+  .breathe-orb{animation:none;transform:scale(1)}
+}
+
+/* RESUME card no hero */
+.resume-card{
+  margin-top:28px;padding:18px 20px;border-radius:var(--radius);
+  background:linear-gradient(160deg,rgba(42,33,23,.7),rgba(31,24,16,.7));
+  border:1px solid var(--line-strong);
+  display:flex;flex-direction:column;gap:12px;
+}
+.resume-card .rh{
+  font-family:var(--sans);font-size:11px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--gold-deep);font-weight:500;
+}
+.resume-card .rt{
+  font-family:var(--serif);font-size:18px;color:var(--cream);line-height:1.4;
+}
+.resume-card .rt b{color:var(--gold-soft);font-weight:500}
+.resume-card .ra{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+@media(max-width:560px){
+  .resume-card .ra{flex-direction:column;align-items:stretch}
+  .resume-card .ra .btn,.resume-card .ra .btn-text{width:100%;justify-content:center}
+}
+
+/* POSTER (constelação) */
+.poster-wrap{
+  margin-top:8px;border-radius:var(--radius-lg);overflow:hidden;
+  border:1px solid var(--line-strong);
+  background:#0b0805;
+  box-shadow:0 20px 60px -20px rgba(0,0,0,.7), 0 0 40px -20px rgba(201,168,98,.3);
+  position:relative;
+}
+#poster{
+  display:block;width:100%;height:auto;aspect-ratio:9/16;
+  background:#0b0805;
+}
+.poster-actions{
+  display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;
+}
+@media(max-width:560px){
+  .poster-actions{flex-direction:column}
+  .poster-actions .btn,.poster-actions .btn-ghost{width:100%;justify-content:center}
+}
+.poster-caption{
+  font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);text-align:center;margin-top:10px;font-weight:500;
+}
+
 /* RESULTADO */
 .result-block{padding:16px 0;border-bottom:1px solid var(--line)}
 .result-block:first-child{padding-top:0}
@@ -497,7 +595,8 @@ textarea:focus,input:focus{
   body{background:#fff!important;color:#1a130a!important}
   body::before,#stars,.aurora,.topbar,.social-bar,.saved-flag,
   .actions,.btn,.btn-ghost,.btn-text,.profile-line,.viz-wrap,
-  .read-aloud,details summary,.skip-strong{display:none!important}
+  .read-aloud,details summary,.skip-strong,
+  .poster-wrap,.poster-actions,.poster-caption{display:none!important}
   details[open] summary{display:none!important}
   details{border:none!important;background:none!important}
   .screen{display:none!important}
@@ -562,6 +661,14 @@ textarea:focus,input:focus{
       <div class="actions">
         <button class="btn" onclick="go('intro')">Começar <span class="arr">→</span></button>
       </div>
+      <div class="resume-card" id="resumeCard" style="display:none">
+        <div class="rh">Continuar de onde parei</div>
+        <div class="rt" id="resumeText">Passo <b id="resumeStep">02</b> · <b id="resumeLabel">Origem</b></div>
+        <div class="ra">
+          <button class="btn" onclick="resumeJourney()">Continuar <span class="arr">→</span></button>
+          <button class="btn-text" onclick="restart()">Recomeçar</button>
+        </div>
+      </div>
       <div class="profile-line">
         <span>Criado por</span>
         <a href="https://instagram.com/drasunyannunes" target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#ig"/></svg> Dra. Sunyan Nunes</a>
@@ -601,7 +708,7 @@ textarea:focus,input:focus{
       </div>
 
       <div class="actions">
-        <button class="btn" onclick="startSteps()">Começar o mapa <span class="arr">→</span></button>
+        <button class="btn" onclick="startBreathing()">Começar o mapa <span class="arr">→</span></button>
         <button class="btn-text" onclick="go('hero')">Voltar</button>
       </div>
 
@@ -610,6 +717,17 @@ textarea:focus,input:focus{
         <span class="dot">·</span>
         <a href="https://instagram.com/drasunyannunes" target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#ig"/></svg> @drasunyannunes</a>
       </div>
+    </div>
+  </section>
+
+  <!-- RESPIRAÇÃO antes dos passos -->
+  <section class="screen" data-screen="breathe">
+    <div class="breathe-stage">
+      <p class="eyebrow">Antes de começar</p>
+      <div class="breathe-orb" aria-hidden="true"></div>
+      <div class="breathe-label" id="breatheLabel">Inspire</div>
+      <p class="breathe-sub">três respirações · presença</p>
+      <button class="btn-text breathe-skip" onclick="skipBreathing()">Pular respiração</button>
     </div>
   </section>
 
